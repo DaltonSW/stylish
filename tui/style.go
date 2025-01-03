@@ -2,9 +2,19 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+)
+
+var (
+	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	cursorStyle  = focusedStyle
+	noStyle      = lipgloss.NewStyle()
+	helpStyle    = blurredStyle
 )
 
 type StyleModel struct {
@@ -29,7 +39,9 @@ type StyleModel struct {
 func NewStyleCreateModel(theme string, viewWidth, viewHeight int) StyleModel {
 	nameInput := textinput.New()
 	nameInput.Focus()
-	nameInput.Placeholder = "Style (and File) Name"
+	nameInput.Placeholder = "Style Name"
+	nameInput.PromptStyle = focusedStyle
+	nameInput.TextStyle = focusedStyle
 
 	foreSlider := 128
 	backSlider := 0
@@ -49,6 +61,8 @@ func NewStyleEditModel(theme, style string, viewWidth, viewHeight int) StyleMode
 	// nameInput.Focus()
 	nameInput.Placeholder = "Style (and File) Name"
 	nameInput.SetValue(style)
+	nameInput.PromptStyle = blurredStyle
+	nameInput.TextStyle = blurredStyle
 
 	foreSlider := 128
 	backSlider := 0
@@ -69,14 +83,34 @@ func (m StyleModel) Init() tea.Cmd {
 }
 
 func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var outCmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc":
+		case "esc", "q":
 			return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
-		case "tab":
-			// Cycle through focusable elements
-			m.Focused = (m.Focused + 1) % 7
+		case "tab", "down", "shift+tab", "up":
+			if msg.String() == "tab" || msg.String() == "down" {
+
+				m.Focused++
+				if m.Focused > 6 {
+					m.Focused = 0
+				}
+			} else {
+				m.Focused--
+				if m.Focused < 0 {
+					m.Focused = 6
+				}
+			}
+			if m.Focused == 0 {
+				outCmds = append(outCmds, m.NameInput.Focus())
+				m.NameInput.PromptStyle = focusedStyle
+				m.NameInput.TextStyle = focusedStyle
+			} else {
+				m.NameInput.Blur()
+				m.NameInput.PromptStyle = blurredStyle
+				m.NameInput.TextStyle = blurredStyle
+			}
 		case "space", "enter":
 			// Toggle checkboxes if focused
 			switch m.Focused {
@@ -104,38 +138,66 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	}
 
-	// Update name input if focused
-	if m.Focused == 0 {
-		var cmd tea.Cmd
-		m.NameInput, cmd = m.NameInput.Update(msg)
-		return m, cmd
-	}
+	var cmd tea.Cmd
+	m.NameInput, cmd = m.NameInput.Update(msg)
+	outCmds = append(outCmds, cmd)
 
-	return m, nil
+	return m, tea.Batch(outCmds...)
 }
 
 func (m StyleModel) View() string {
-	return fmt.Sprintf(
-		"Name: %s\n\n"+
-			"Styles:\n"+
-			"%s Bold\n"+
-			"%s Underline\n"+
-			"%s Blink\n\n"+
-			"Foreground: %s [%d]\n"+
-			"Background: %s [%d]\n"+
-			"Controls: [TAB] Cycle Focus | [SPACE] Toggle | [←/→] Adjust Slider | [S] Save | [ESC] Back",
-		m.NameInput.View(),
-		checkboxView(m.Bold, "Bold"),
-		checkboxView(m.Under, "Underline"),
-		checkboxView(m.Blink, "Blink"),
-		renderSlider(m.ForeColor), m.ForeColor,
-		renderSlider(m.BackColor), m.BackColor,
-	)
+
+	return Center(fmt.Sprintf("%v\n\n%v\n\n%v\n\n\n%v\n", m.renderName(), m.renderStyles(), m.renderSliders(), m.renderPreview()))
+
 }
 
-func renderSlider(value int) string {
+func (m StyleModel) renderName() string {
+	return CenterHorz(fmt.Sprintf("%v\n\n%v", TitleStyle.Render("Name"), m.NameInput.View()))
+}
+
+func (m StyleModel) renderStyles() string {
+	sOut := TitleStyle.Render("Styles") + "\n\n" +
+		"%s\n" +
+		"%s\n" +
+		"%s\n\n"
+
+	return CenterHorz(fmt.Sprintf(sOut,
+		checkboxView(m.Bold, "Bold     ", m.Focused == 1),
+		checkboxView(m.Under, "Underline", m.Focused == 2),
+		checkboxView(m.Blink, "Blink    ", m.Focused == 3)))
+}
+
+func (m StyleModel) renderSliders() string {
+	var foreStr string
+	var backStr string
+	if m.Focused == 4 {
+		foreStr = focusedStyle.Render(" > Foreground:") + " %v [%03d]"
+		backStr = "   Background: %v [%03d]"
+	} else if m.Focused == 5 {
+		foreStr = "   Foreground: %v [%03d]"
+		backStr = focusedStyle.Render(" > Background:") + " %v [%03d]"
+	} else {
+		foreStr = "   Foreground: %v [%03d]"
+		backStr = "   Background: %v [%03d]"
+	}
+	foreStr = fmt.Sprintf(foreStr, renderSlider(m.ForeColor, m.ViewWidth/2), m.ForeColor)
+	backStr = fmt.Sprintf(backStr, renderSlider(m.BackColor, m.ViewWidth/2), m.BackColor)
+
+	return CenterHorz(fmt.Sprintf(TitleStyle.Render("Colors")+"\n\n%v\n%v", foreStr, backStr))
+}
+
+func (m StyleModel) renderPreview() string {
+	previewColor := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(strconv.Itoa(m.ForeColor))).
+		Background(lipgloss.Color(strconv.Itoa(m.BackColor))).
+		Bold(m.Bold).Underline(m.Under).Blink(m.Blink)
+
+	return CenterHorz(TitleStyle.Render("Preview") + "\n" + previewColor.Render("file.example"))
+}
+
+func renderSlider(value, width int) string {
 	bar := ""
-	totalBlocks := 20
+	totalBlocks := width
 	position := value * totalBlocks / 255
 	for i := 0; i < totalBlocks; i++ {
 		if i <= position {
@@ -147,11 +209,25 @@ func renderSlider(value int) string {
 	return bar
 }
 
-func checkboxView(checked bool, label string) string {
+func checkboxView(checked bool, label string, focused bool) string {
+	var check string
+	var focus string
+	var style lipgloss.Style
 	if checked {
-		return fmt.Sprintf("[x] %s", label)
+		check = "[x]"
+	} else {
+		check = "[ ]"
 	}
-	return fmt.Sprintf("[ ] %s", label)
+
+	if focused {
+		focus = " >"
+		style = focusedStyle
+	} else {
+		focus = "  "
+		style = noStyle
+	}
+
+	return style.Render(fmt.Sprintf("%v %v %v", focus, check, label))
 }
 
 func sliderAdjustment(key string) int {
