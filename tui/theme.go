@@ -20,9 +20,9 @@ func (s StyleItem) FilterValue() string { return string(s) }
 func (s StyleItem) Title() string       { return string(s) }
 func (s StyleItem) Description() string { return "" }
 
-func NewThemeModel(theme string) ThemeModel {
+func NewThemeModel(theme string, listWidth, listHeight int) ThemeModel {
 	styles := getThemeStyles(theme)
-	list := list.New(styles, list.NewDefaultDelegate(), 40, 20)
+	list := list.New(styles, list.NewDefaultDelegate(), listWidth, listHeight)
 	list.Title = "Manage Styles"
 	return ThemeModel{ThemeName: theme, StyleList: list}
 
@@ -38,10 +38,15 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			selected := m.StyleList.SelectedItem().(list.DefaultItem).Title()
-			return NewStyleModel(selected), nil
-			// case "n":
-			// TODO:  Logic to create a new style
+			return NewStyleEditModel(m.ThemeName, selected, m.StyleList.Width(), m.StyleList.Height()), nil
+		case "n":
+			return NewStyleCreateModel(m.ThemeName, m.StyleList.Width(), m.StyleList.Height()), nil
+		case "esc":
+			return NewLandingModel(), nil
 		}
+	case tea.WindowSizeMsg:
+		m.StyleList.SetWidth(msg.Width)
+		m.StyleList.SetHeight(msg.Height)
 	}
 	var cmd tea.Cmd
 	m.StyleList, cmd = m.StyleList.Update(msg)

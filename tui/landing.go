@@ -42,10 +42,13 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			selected := m.ThemeList.SelectedItem().(list.DefaultItem).Title()
-			return NewThemeModel(selected), nil
+			return NewThemeModel(selected, m.ThemeList.Width(), m.ThemeList.Height()), nil
 		case "n":
 			// TODO: New folder option
 		}
+	case tea.WindowSizeMsg:
+		m.ThemeList.SetWidth(msg.Width)
+		m.ThemeList.SetHeight(msg.Height)
 	}
 	var cmd tea.Cmd
 	m.ThemeList, cmd = m.ThemeList.Update(msg)
