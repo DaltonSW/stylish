@@ -3,11 +3,13 @@ package tui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"go.dalton.dog/colorgen/config"
 )
 
 var (
@@ -18,20 +20,32 @@ var (
 	helpStyle    = blurredStyle
 )
 
-type StyleModel struct {
-	Theme string
+var ControlOrder []string = []string{
+	"Bold",
+	"Under",
+	"Blink",
+	"Fore",
+	"Back",
+	"Files",
+	"Save",
+	"Discard",
+}
 
-	StyleName string
+type StyleModel struct {
+	Theme string `yaml:"theme"`
+
+	StyleName string `yaml:"name"`
 	NameInput textinput.Model
 
-	Bold  bool
-	Under bool
-	Blink bool
+	Bold  bool `yaml:"bold"`
+	Under bool `yaml:"under"`
+	Blink bool `yaml:"blink"`
 
-	ForeColor int
-	BackColor int
+	ForeColor int `yaml:"fore"`
+	BackColor int `yaml:"back"`
 
-	FileArea textarea.Model
+	FileArea  textarea.Model
+	FileTypes []string `yaml:"filetypes"`
 
 	Focused int
 
@@ -39,60 +53,53 @@ type StyleModel struct {
 	ViewHeight int
 }
 
-func NewStyleCreateModel(theme string, viewWidth, viewHeight int) StyleModel {
-	nameInput := textinput.New()
-	nameInput.Focus()
-	nameInput.Placeholder = "Style Name"
-	nameInput.PromptStyle = focusedStyle
-	nameInput.TextStyle = focusedStyle
-
-	foreSlider := 128
-	backSlider := 0
-
-	fileArea := textarea.New()
-	fileArea.Placeholder = ".mp3\n.gif\n.docx\n..."
-	fileArea.Blur()
-
-	return StyleModel{
-		Theme:      theme,
-		NameInput:  nameInput,
-		ForeColor:  foreSlider,
-		BackColor:  backSlider,
-		ViewWidth:  viewWidth,
-		ViewHeight: viewHeight,
-		FileArea:   fileArea,
-	}
-}
-
-func NewStyleEditModel(theme, style string, viewWidth, viewHeight int) StyleModel {
+func NewStyleEditModel(themeName, styleName string, viewWidth, viewHeight int) StyleModel {
 	nameInput := textinput.New()
 	// nameInput.Focus()
 	nameInput.Placeholder = "Style Name"
-	nameInput.SetValue(style)
-	nameInput.PromptStyle = blurredStyle
-	nameInput.TextStyle = blurredStyle
+	nameInput.SetValue(styleName)
+	nameInput.PromptStyle = focusedStyle
+	nameInput.TextStyle = focusedStyle
+	nameInput.Prompt = ""
 
+	newStyle := config.LoadStyle(themeName, styleName)
+	if newStyle != nil {
+		fileArea := textarea.New()
+		fileArea.SetValue(strings.Join(newStyle.FileTypes, "\n"))
+		return StyleModel{
+			Theme:     themeName,
+			StyleName: styleName,
+			Bold:      newStyle.Bold,
+			Under:     newStyle.Under,
+			Blink:     newStyle.Blink,
+			ForeColor: newStyle.ForeColor,
+			BackColor: newStyle.BackColor,
+			FileTypes: newStyle.FileTypes,
+			FileArea:  fileArea,
+			NameInput: nameInput,
+		}
+
+	}
 	foreSlider := 128
-	backSlider := 0
+	backSlider := -1
 
 	fileArea := textarea.New()
 	fileArea.Placeholder = ".mp3\n.gif\n.docx\n..."
 	fileArea.Blur()
 
 	return StyleModel{
-		Theme:      theme,
+		Theme:      themeName,
 		NameInput:  nameInput,
 		ForeColor:  foreSlider,
 		BackColor:  backSlider,
 		ViewWidth:  viewWidth,
 		ViewHeight: viewHeight,
-		Focused:    1,
 		FileArea:   fileArea,
 	}
 }
 
 func (m StyleModel) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(textinput.Blink, textarea.Blink)
 }
 
 func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -100,56 +107,62 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "esc", "q":
-			return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
+		// case "esc", "q":
+		// 	if msg.String() == "q" && m.FileArea.Focused() {
+		// 		break
+		// 	}
+		// 	return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
 		case "tab", "down", "shift+tab", "up":
 			if msg.String() == "tab" || msg.String() == "down" {
 
 				m.Focused++
-				if m.Focused > 6 {
+				if m.Focused >= len(ControlOrder) {
 					m.Focused = 0
 				}
 			} else {
 				m.Focused--
 				if m.Focused < 0 {
-					m.Focused = 6
+					m.Focused = len(ControlOrder) - 1
 				}
 			}
-			if m.Focused == 0 {
-				outCmds = append(outCmds, m.NameInput.Focus())
-				m.NameInput.PromptStyle = focusedStyle
-				m.NameInput.TextStyle = focusedStyle
-			} else {
-				m.NameInput.Blur()
-				m.NameInput.PromptStyle = blurredStyle
-				m.NameInput.TextStyle = blurredStyle
-			}
 
-			if m.Focused == 6 {
+			if ControlOrder[m.Focused] == "Files" {
 				outCmds = append(outCmds, m.FileArea.Focus())
 			} else {
 				m.FileArea.Blur()
 			}
 		case "space", "enter":
 			// Toggle checkboxes if focused
-			switch m.Focused {
-			case 1:
+			switch ControlOrder[m.Focused] {
+			case "Bold":
 				m.Bold = !m.Bold
-			case 2:
+			case "Under":
 				m.Under = !m.Under
-			case 3:
+			case "Blink":
 				m.Blink = !m.Blink
+			case "Save":
+				var styleToSave = config.Style{
+					Theme:     m.Theme,
+					StyleName: m.NameInput.Value(),
+					Bold:      m.Bold,
+					Under:     m.Under,
+					Blink:     m.Blink,
+					ForeColor: m.ForeColor,
+					BackColor: m.BackColor,
+					FileTypes: strings.Split(m.FileArea.Value(), "\n"),
+				}
+				config.SaveStyle(styleToSave)
+				return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
+			case "Discard":
+				return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
 			}
 		case "left", "right":
 			// Adjust sliders
-			if m.Focused == 4 {
-				m.ForeColor = clamp(m.ForeColor+sliderAdjustment(msg.String()), 0, 255)
-			} else if m.Focused == 5 {
-				m.BackColor = clamp(m.BackColor+sliderAdjustment(msg.String()), 0, 255)
+			if ControlOrder[m.Focused] == "Fore" {
+				m.ForeColor = clamp(m.ForeColor+sliderAdjustment(msg.String()), -1, 255)
+			} else if ControlOrder[m.Focused] == "Back" {
+				m.BackColor = clamp(m.BackColor+sliderAdjustment(msg.String()), -1, 255)
 			}
-		case "s":
-			// TODO: Save the style
-			// saveStyle(m.folder, m.fileName, m)
 		}
 	case tea.WindowSizeMsg:
 		m.ViewWidth = msg.Width
@@ -161,13 +174,26 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.NameInput, cmd = m.NameInput.Update(msg)
 	outCmds = append(outCmds, cmd)
 
+	m.FileArea, cmd = m.FileArea.Update(msg)
+	outCmds = append(outCmds, cmd)
+
 	return m, tea.Batch(outCmds...)
 }
 
 func (m StyleModel) View() string {
-
-	return Center(fmt.Sprintf("%v\n\n%v\n\n%v\n\n%v\n\n%v", m.renderName(), m.renderStyles(), m.renderSliders(), m.renderPreview(), m.renderFileArea()))
-
+	return Center(fmt.Sprintf(
+		"%v\n\n"+
+			"%v\n\n"+
+			"%v\n\n"+
+			"%v\n\n"+
+			"%v\n\n"+
+			"%v\n\n",
+		m.renderName(),
+		m.renderStyles(),
+		m.renderSliders(),
+		m.renderPreview(),
+		m.renderFileArea(),
+		m.renderButtons()))
 }
 
 func (m StyleModel) renderName() string {
@@ -181,18 +207,18 @@ func (m StyleModel) renderStyles() string {
 		"%s\n\n"
 
 	return CenterHorz(fmt.Sprintf(sOut,
-		checkboxView(m.Bold, "Bold     ", m.Focused == 1),
-		checkboxView(m.Under, "Underline", m.Focused == 2),
-		checkboxView(m.Blink, "Blink    ", m.Focused == 3)))
+		checkboxView(m.Bold, "Bold     ", ControlOrder[m.Focused] == "Bold"),
+		checkboxView(m.Under, "Underline", ControlOrder[m.Focused] == "Under"),
+		checkboxView(m.Blink, "Blink    ", ControlOrder[m.Focused] == "Blink")))
 }
 
 func (m StyleModel) renderSliders() string {
 	var foreStr string
 	var backStr string
-	if m.Focused == 4 {
+	if ControlOrder[m.Focused] == "Fore" {
 		foreStr = focusedStyle.Render(" > Foreground:") + " %v [%03d]"
 		backStr = "   Background: %v [%03d]"
-	} else if m.Focused == 5 {
+	} else if ControlOrder[m.Focused] == "Back" {
 		foreStr = "   Foreground: %v [%03d]"
 		backStr = focusedStyle.Render(" > Background:") + " %v [%03d]"
 	} else {
@@ -206,9 +232,15 @@ func (m StyleModel) renderSliders() string {
 }
 
 func (m StyleModel) renderPreview() string {
+	var backColor lipgloss.Color
+	if m.BackColor == -1 {
+		backColor = lipgloss.Color("")
+	} else {
+		backColor = lipgloss.Color(strconv.Itoa(m.BackColor))
+	}
 	previewColor := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(strconv.Itoa(m.ForeColor))).
-		Background(lipgloss.Color(strconv.Itoa(m.BackColor))).
+		Background(backColor).
 		Bold(m.Bold).Underline(m.Under).Blink(m.Blink)
 
 	return CenterHorz(TitleStyle.Render("Preview") + "\n\n" + previewColor.Render("file.example"))
@@ -216,6 +248,57 @@ func (m StyleModel) renderPreview() string {
 
 func (m StyleModel) renderFileArea() string {
 	return CenterHorz(fmt.Sprintf("%v\n%v", TitleStyle.Render("File Types"), m.FileArea.View()))
+}
+
+func (m StyleModel) renderButtons() string {
+	var save string
+	var discard string
+	if ControlOrder[m.Focused] == "Save" {
+		save = focusedStyle.Render("[ Save & Exit ]")
+		discard = "[ " + blurredStyle.Render("Discard & Exit") + " ]"
+	} else if ControlOrder[m.Focused] == "Discard" {
+		save = "[ " + blurredStyle.Render("Save & Exit") + " ]"
+		discard = focusedStyle.Render("[ Discard & Exit ]")
+	} else {
+		save = "[ " + blurredStyle.Render("Save & Exit") + " ]"
+		discard = "[ " + blurredStyle.Render("Discard & Exit") + " ]"
+
+	}
+	return CenterHorz(fmt.Sprintf("%v\n\n%v\n\n", save, discard))
+}
+
+func (m StyleModel) GetDirColorBlock() string {
+	outStr := " # " + m.StyleName + "\n\n"
+
+	styleStr := ""
+
+	if m.Bold {
+		styleStr += "1;"
+	}
+
+	if m.Under {
+		styleStr += "4;"
+	}
+
+	if m.Blink {
+		styleStr += "5;"
+	}
+
+	if m.ForeColor != -1 {
+		styleStr += fmt.Sprintf("38;5;%v;", strconv.Itoa(m.ForeColor))
+	}
+
+	if m.BackColor != -1 {
+		styleStr += fmt.Sprintf("48;5;%v;", strconv.Itoa(m.BackColor))
+	}
+
+	styleStr = strings.TrimSuffix(styleStr, ";")
+
+	for _, file := range m.FileTypes {
+		outStr += fmt.Sprintf("%v %v\n", file, styleStr)
+	}
+
+	return outStr
 }
 
 func renderSlider(value, width int) string {

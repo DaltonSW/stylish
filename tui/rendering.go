@@ -10,7 +10,7 @@ import (
 )
 
 var OverallRender = lipgloss.NewStyle().Align(lipgloss.Center, lipgloss.Center)
-var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF"))
+var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Width(100).Height(32)
 var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true)
 
 var FocusedAreaStyle = textarea.Style{}
