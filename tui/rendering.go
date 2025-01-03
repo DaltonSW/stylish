@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
 )
@@ -11,6 +12,10 @@ import (
 var OverallRender = lipgloss.NewStyle().Align(lipgloss.Center, lipgloss.Center)
 var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF"))
 var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true)
+
+var FocusedAreaStyle = textarea.Style{}
+
+var BlurredAreaStyle = textarea.Style{}
 
 func GetTermSize() (int, int) {
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))

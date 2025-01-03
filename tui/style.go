@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -30,6 +31,8 @@ type StyleModel struct {
 	ForeColor int
 	BackColor int
 
+	FileArea textarea.Model
+
 	Focused int
 
 	ViewWidth  int
@@ -46,6 +49,10 @@ func NewStyleCreateModel(theme string, viewWidth, viewHeight int) StyleModel {
 	foreSlider := 128
 	backSlider := 0
 
+	fileArea := textarea.New()
+	fileArea.Placeholder = ".mp3\n.gif\n.docx\n..."
+	fileArea.Blur()
+
 	return StyleModel{
 		Theme:      theme,
 		NameInput:  nameInput,
@@ -53,19 +60,24 @@ func NewStyleCreateModel(theme string, viewWidth, viewHeight int) StyleModel {
 		BackColor:  backSlider,
 		ViewWidth:  viewWidth,
 		ViewHeight: viewHeight,
+		FileArea:   fileArea,
 	}
 }
 
 func NewStyleEditModel(theme, style string, viewWidth, viewHeight int) StyleModel {
 	nameInput := textinput.New()
 	// nameInput.Focus()
-	nameInput.Placeholder = "Style (and File) Name"
+	nameInput.Placeholder = "Style Name"
 	nameInput.SetValue(style)
 	nameInput.PromptStyle = blurredStyle
 	nameInput.TextStyle = blurredStyle
 
 	foreSlider := 128
 	backSlider := 0
+
+	fileArea := textarea.New()
+	fileArea.Placeholder = ".mp3\n.gif\n.docx\n..."
+	fileArea.Blur()
 
 	return StyleModel{
 		Theme:      theme,
@@ -75,6 +87,7 @@ func NewStyleEditModel(theme, style string, viewWidth, viewHeight int) StyleMode
 		ViewWidth:  viewWidth,
 		ViewHeight: viewHeight,
 		Focused:    1,
+		FileArea:   fileArea,
 	}
 }
 
@@ -110,6 +123,12 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.NameInput.Blur()
 				m.NameInput.PromptStyle = blurredStyle
 				m.NameInput.TextStyle = blurredStyle
+			}
+
+			if m.Focused == 6 {
+				outCmds = append(outCmds, m.FileArea.Focus())
+			} else {
+				m.FileArea.Blur()
 			}
 		case "space", "enter":
 			// Toggle checkboxes if focused
@@ -147,7 +166,7 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m StyleModel) View() string {
 
-	return Center(fmt.Sprintf("%v\n\n%v\n\n%v\n\n\n%v\n", m.renderName(), m.renderStyles(), m.renderSliders(), m.renderPreview()))
+	return Center(fmt.Sprintf("%v\n\n%v\n\n%v\n\n%v\n\n%v", m.renderName(), m.renderStyles(), m.renderSliders(), m.renderPreview(), m.renderFileArea()))
 
 }
 
@@ -192,7 +211,11 @@ func (m StyleModel) renderPreview() string {
 		Background(lipgloss.Color(strconv.Itoa(m.BackColor))).
 		Bold(m.Bold).Underline(m.Under).Blink(m.Blink)
 
-	return CenterHorz(TitleStyle.Render("Preview") + "\n" + previewColor.Render("file.example"))
+	return CenterHorz(TitleStyle.Render("Preview") + "\n\n" + previewColor.Render("file.example"))
+}
+
+func (m StyleModel) renderFileArea() string {
+	return CenterHorz(fmt.Sprintf("%v\n%v", TitleStyle.Render("File Types"), m.FileArea.View()))
 }
 
 func renderSlider(value, width int) string {
