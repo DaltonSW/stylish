@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
-	if _, err := tea.NewProgram(tui.NewLandingModel(), tea.WithAltScreen()).Run(); err != nil {
+	w, h := tui.GetTermSize()
+	program := tea.NewProgram(tui.NewLandingModel(w, h), tea.WithAltScreen())
+	if _, err := program.Run(); err != nil {
 		log.Fatalf("Error starting program: %v\n", err)
 	}
 }
