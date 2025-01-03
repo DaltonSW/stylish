@@ -12,6 +12,8 @@ type LandingModel struct {
 	Title     string
 	Subtitle  string
 	ThemeList list.Model
+	Width     int
+	Height    int
 }
 
 type ThemeItem string
@@ -25,10 +27,19 @@ var UserConfig, _ = os.UserConfigDir()
 var ColorGenConfig = fmt.Sprintf("%v/colorgen", UserConfig)
 
 func NewLandingModel() LandingModel {
+	w, h := GetTermSize()
+	OverallRender.MaxWidth(w)
+	OverallRender.MaxHeight(h)
 	themes := getThemes()
-	l := list.New(themes, list.NewDefaultDelegate(), 50, 20)
+	l := list.New(themes, list.NewDefaultDelegate(), w, h/2)
 	l.Title = "Select Theme To Edit"
-	return LandingModel{ThemeList: l}
+	return LandingModel{
+		Title:     "ColorGen",
+		Subtitle:  "Put the glam in your term",
+		ThemeList: l,
+		Width:     w,
+		Height:    h,
+	}
 
 }
 
@@ -47,8 +58,10 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// TODO: New folder option
 		}
 	case tea.WindowSizeMsg:
-		m.ThemeList.SetWidth(msg.Width)
-		m.ThemeList.SetHeight(msg.Height)
+		// m.ThemeList.SetWidth(msg.Width - 2)
+		// m.ThemeList.SetHeight(msg.Height - 2)
+		m.Width = msg.Width
+		m.Height = msg.Height
 	}
 	var cmd tea.Cmd
 	m.ThemeList, cmd = m.ThemeList.Update(msg)
@@ -56,8 +69,11 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m LandingModel) View() string {
-	// return fmt.Sprintf("%v\n\n%v\n%v\n", m.Title, m.Subtitle, m.ThemeList.View())
-	return m.ThemeList.View()
+	return Center(fmt.Sprintf("%v\n%v", m.getHeader(), ViewportBorder.Render(m.ThemeList.View())))
+}
+
+func (m LandingModel) getHeader() string {
+	return fmt.Sprintf("%v\n\n%v\n", m.Title, m.Subtitle)
 }
 
 func getThemes() []list.Item {

@@ -6,12 +6,14 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type ThemeModel struct {
 	ThemeName string
 	StyleList list.Model
+	Viewport  viewport.Model
 }
 
 type StyleItem string
@@ -24,6 +26,7 @@ func NewThemeModel(theme string, listWidth, listHeight int) ThemeModel {
 	styles := getThemeStyles(theme)
 	list := list.New(styles, list.NewDefaultDelegate(), listWidth, listHeight)
 	list.Title = "Manage Styles"
+
 	return ThemeModel{ThemeName: theme, StyleList: list}
 
 }
@@ -54,7 +57,7 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ThemeModel) View() string {
-	return m.StyleList.View()
+	return Center(ViewportBorder.Render(m.StyleList.View()))
 }
 
 func getThemeStyles(theme string) []list.Item {
