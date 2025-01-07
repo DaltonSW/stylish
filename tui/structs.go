@@ -10,31 +10,39 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var UserConfig, _ = os.UserConfigDir()
+var ThemeConfigFolder = filepath.Join(UserConfig, "stylish")
+
+// Theme represents a collection of Styles
 type Theme struct {
 	Name   string
 	Path   string
 	Styles []*Style
 }
 
+// These functions fullfil the tea.DefaultItemValue interface
 func (t Theme) FilterValue() string { return t.Name }
 func (t Theme) Title() string       { return t.Name }
-func (t Theme) Description() string { return "" }
+func (t Theme) Description() string { return fmt.Sprintf("Styles loaded: %v", len(t.Styles)) }
 
-func GetAllThemeNames() []string {
-	var outNames []string
+// GetAllThemes will return a slice containing all Themes
+func GetAllThemes() []Theme {
+
+	var outThemes []Theme
 
 	dir, _ := os.ReadDir(ThemeConfigFolder)
 
 	for _, thing := range dir {
 		if thing.IsDir() {
-			outNames = append(outNames, thing.Name())
+			outThemes = append(outThemes, *GetTheme(thing.Name()))
 		}
 	}
 
-	return outNames
-
+	return outThemes
 }
 
+// GetTheme will get the theme of a given name. If the provided name
+// doesn't exist, a folder for that theme will be created.
 func GetTheme(name string) *Theme {
 	if name == "" {
 		return nil
@@ -54,6 +62,7 @@ func GetTheme(name string) *Theme {
 	return outTheme
 }
 
+// LoadStyles will load all of the styles for a given theme
 func (t *Theme) LoadStyles() {
 	dir, _ := os.ReadDir(t.Path)
 
@@ -64,6 +73,7 @@ func (t *Theme) LoadStyles() {
 	}
 }
 
+// GenerateTheme will convert all of a theme's styles into an output file
 func (t *Theme) GenerateTheme() error {
 
 	path := filepath.Join(ThemeConfigFolder, t.Name)

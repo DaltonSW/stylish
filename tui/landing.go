@@ -74,8 +74,6 @@ func newLandingKeymap() landingKeymap {
 }
 
 type LandingModel struct {
-	Title        string
-	Subtitle     string
 	ThemeList    list.Model
 	ThemeInput   textinput.Model
 	InputActive  bool
@@ -85,28 +83,15 @@ type LandingModel struct {
 	help help.Model
 }
 
-type ThemeItem string
-
-func (t ThemeItem) FilterValue() string { return string(t) }
-func (t ThemeItem) Title() string       { return string(t) }
-func (t ThemeItem) Description() string { return "" }
-
-var UserConfig, _ = os.UserConfigDir()
-
-var ThemeConfigFolder = fmt.Sprintf("%v/stylish", UserConfig)
-
 func NewLandingModel() LandingModel {
-	themeNames := GetAllThemeNames()
-	themeList := make([]list.Item, 0, len(themeNames))
-	for _, name := range themeNames {
-		if name == "" {
-			continue
-		}
-		themeList = append(themeList, list.Item(GetTheme(name)))
+	themes := GetAllThemes()
+	var items []list.Item
+	for _, t := range themes {
+		items = append(items, list.Item(t))
 	}
-	l := list.New(themeList, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
+
+	l := list.New(items, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
 	l.SetStatusBarItemName("theme", "themes")
-	l.Title = "Select Theme To Edit"
 	l.SetShowTitle(false)
 	l.SetShowHelp(false)
 
@@ -151,8 +136,8 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "y":
 			if m.DeleteActive {
-				selected := m.ThemeList.SelectedItem().(ThemeItem)
-				m.deleteTheme(string(selected))
+				selected := m.ThemeList.SelectedItem().(Theme)
+				m.deleteTheme(selected.Name)
 				m.DeleteActive = false
 				m.ThemeList.RemoveItem(m.ThemeList.Index())
 			}
@@ -202,22 +187,6 @@ func (m LandingModel) View() string {
 		listHeader := CenterHorz(TitleStyle.Render("Current Themes") + "\n" + SubtitleStyle.Render(ThemeConfigFolder))
 		return RenderModel(listHeader+"\n"+m.ThemeList.View(), m.help.View(m.keys))
 	}
-}
-
-func getThemes() []list.Item {
-	var themes []list.Item
-
-	os.MkdirAll(ThemeConfigFolder+"/default", 0755)
-
-	dir, _ := os.ReadDir(ThemeConfigFolder)
-
-	for _, thing := range dir {
-		if thing.IsDir() {
-			themes = append(themes, ThemeItem(thing.Name()))
-		}
-	}
-
-	return themes
 }
 
 func (m *LandingModel) createTheme(name string) {
