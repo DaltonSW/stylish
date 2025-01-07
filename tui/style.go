@@ -12,7 +12,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"go.dalton.dog/colorgen/config"
 )
 
 var (
@@ -129,7 +128,7 @@ func NewStyleEditModel(themeName, styleName string) StyleModel {
 	nameInput.TextStyle = focusedStyle
 	nameInput.Prompt = ""
 
-	newStyle := config.LoadStyle(themeName, styleName)
+	newStyle := GetStyle(themeName, styleName)
 	if newStyle != nil {
 		fileArea := textarea.New()
 		fileArea.SetValue(strings.Join(newStyle.FileTypes, "\n"))
@@ -139,8 +138,8 @@ func NewStyleEditModel(themeName, styleName string) StyleModel {
 			Bold:       newStyle.Bold,
 			Under:      newStyle.Under,
 			Blink:      newStyle.Blink,
-			ForeColor:  newStyle.ForeColor,
-			BackColor:  newStyle.BackColor,
+			ForeColor:  newStyle.Fore,
+			BackColor:  newStyle.Back,
 			foreSlider: foreSlider,
 			backSlider: backSlider,
 			FileTypes:  newStyle.FileTypes,
@@ -208,17 +207,17 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "Blink":
 				m.Blink = !m.Blink
 			case "Save":
-				var styleToSave = config.Style{
+				var styleToSave = Style{
 					Theme:     m.Theme,
-					StyleName: m.NameInput.Value(),
+					Name:      m.NameInput.Value(),
 					Bold:      m.Bold,
 					Under:     m.Under,
 					Blink:     m.Blink,
-					ForeColor: m.ForeColor,
-					BackColor: m.BackColor,
+					Fore:      m.ForeColor,
+					Back:      m.BackColor,
 					FileTypes: strings.Split(m.FileArea.Value(), "\n"),
 				}
-				config.SaveStyle(styleToSave)
+				SaveStyle(styleToSave)
 				return NewThemeModel(m.Theme), nil
 			case "Discard":
 				return NewThemeModel(m.Theme), nil

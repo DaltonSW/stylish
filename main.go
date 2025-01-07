@@ -37,7 +37,7 @@ func main() {
 			log.Fatal("No theme provided")
 		}
 		theme := os.Args[2]
-		log.Printf("Generate command for " + theme)
+		log.Print("Generate command for " + theme)
 		newModel := tui.NewThemeModel(theme)
 		err := newModel.GenerateDirColors()
 		if err != nil {
@@ -58,7 +58,7 @@ func main() {
 		}
 		// cmdStr := string(cmdOut)
 		// outStr := strings.TrimPrefix(strings.TrimSuffix(cmdStr, ";\nexport LS_COLORS\n"), "LS_COLORS=")
-		fmt.Printf(string(cmdOut))
+		fmt.Print(string(cmdOut))
 	default:
 		log.Fatal("Command not found")
 	}
