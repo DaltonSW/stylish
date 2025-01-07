@@ -13,62 +13,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type themeKeymap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Select key.Binding
-	Quit   key.Binding
-
-	Delete key.Binding
-	Create key.Binding
-	Filter key.Binding
-}
-
-func (k themeKeymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete}
-}
-
-func (k themeKeymap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Up, k.Down, k.Select, k.Quit},
-		{k.Create, k.Delete, k.Filter}, //, k.Quit},
-		// {k.Quit, k.Filter},
-	}
-}
-
-func newThemeKeymap() themeKeymap {
-	return themeKeymap{
-		Up: key.NewBinding(
-			key.WithKeys("k", "up"),
-			key.WithHelp("k/↑", "Up"),
-		),
-		Down: key.NewBinding(
-			key.WithKeys("j", "down"),
-			key.WithHelp("j/↓", "Down"),
-		),
-		Select: key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "Select"),
-		),
-		Quit: key.NewBinding(
-			key.WithKeys("q", "esc", "ctrl+c"),
-			key.WithHelp("ctrl+c", "Quit"),
-		),
-		Delete: key.NewBinding(
-			key.WithKeys("d", "x"),
-			key.WithHelp("d", "Delete Style"),
-		),
-		Create: key.NewBinding(
-			key.WithKeys("n"),
-			key.WithHelp("n", "New Style"),
-		),
-		Filter: key.NewBinding(
-			key.WithKeys("/"),
-			key.WithHelp("/", "Filter"),
-		),
-	}
-}
-
 type ThemeModel struct {
 	ThemeName string
 	StyleList list.Model
@@ -143,13 +87,8 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.NameInput.Focus()
 			}
 		case "esc", "q":
-			// return NewLandingModel(m.StyleList.Width(), m.StyleList.Height()), nil
 			return NewLandingModel(), nil
 		}
-		// case tea.WindowSizeMsg:
-		// m.StyleList.SetWidth(msg.Width - 4)
-		// m.StyleList.SetHeight(msg.Height - 4)
-		// ViewportBorder.Width(m.StyleList.Width() + 2).Height(m.StyleList.Height() + 2)
 	}
 	var cmd tea.Cmd
 	if m.InputActive {
@@ -203,4 +142,60 @@ func (m ThemeModel) getStyles() []string {
 	}
 
 	return outFiles
+}
+
+type themeKeymap struct {
+	Up     key.Binding
+	Down   key.Binding
+	Select key.Binding
+	Quit   key.Binding
+
+	Delete key.Binding
+	Create key.Binding
+	Filter key.Binding
+}
+
+func (k themeKeymap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete}
+}
+
+func (k themeKeymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.Select, k.Quit},
+		{k.Create, k.Delete, k.Filter}, //, k.Quit},
+		// {k.Quit, k.Filter},
+	}
+}
+
+func newThemeKeymap() themeKeymap {
+	return themeKeymap{
+		Up: key.NewBinding(
+			key.WithKeys("k", "up"),
+			key.WithHelp("k/↑", "Up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("j", "down"),
+			key.WithHelp("j/↓", "Down"),
+		),
+		Select: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Select"),
+		),
+		Quit: key.NewBinding(
+			key.WithKeys("q", "esc", "ctrl+c"),
+			key.WithHelp("ctrl+c", "Quit"),
+		),
+		Delete: key.NewBinding(
+			key.WithKeys("d", "x"),
+			key.WithHelp("d", "Delete Style"),
+		),
+		Create: key.NewBinding(
+			key.WithKeys("n"),
+			key.WithHelp("n", "New Style"),
+		),
+		Filter: key.NewBinding(
+			key.WithKeys("/"),
+			key.WithHelp("/", "Filter"),
+		),
+	}
 }

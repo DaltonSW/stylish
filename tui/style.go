@@ -22,58 +22,6 @@ var (
 	helpStyle    = blurredStyle
 )
 
-type styleKeymap struct {
-	Up    key.Binding
-	Down  key.Binding
-	Left  key.Binding
-	Right key.Binding
-
-	Select key.Binding
-	Quit   key.Binding
-}
-
-func (k styleKeymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.Select, k.Quit}
-}
-
-func (k styleKeymap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Up, k.Down, k.Quit}, //, k.Select, k.Quit},
-		{k.Left, k.Right, k.Select},
-		// {k.Select, k.Quit},
-	}
-}
-
-func newStyleKeymap() styleKeymap {
-	return styleKeymap{
-		Up: key.NewBinding(
-			key.WithKeys("shift+tab", "up"),
-			key.WithHelp("ShTab/↑", "Up"),
-		),
-		Down: key.NewBinding(
-			key.WithKeys("tab", "down"),
-			key.WithHelp("tab/↓", "Down"),
-		),
-
-		Left: key.NewBinding(
-			key.WithKeys("left", "h"),
-			key.WithHelp("h/←", "-1"),
-		),
-		Right: key.NewBinding(
-			key.WithKeys("right", "l"),
-			key.WithHelp("l/→", "+1"),
-		),
-		Select: key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "Toggle"),
-		),
-		Quit: key.NewBinding(
-			key.WithKeys("esc", "ctrl+c"),
-			key.WithHelp("ctrl+c", "Quit"),
-		),
-	}
-}
-
 var ControlOrder []string = []string{
 	"Bold",
 	"Under",
@@ -421,4 +369,58 @@ func clamp(value, min, max int) int {
 		return max
 	}
 	return value
+}
+
+// Region: Keymap stuff
+
+type styleKeymap struct {
+	Up    key.Binding
+	Down  key.Binding
+	Left  key.Binding
+	Right key.Binding
+
+	Select key.Binding
+	Quit   key.Binding
+}
+
+func (k styleKeymap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Select, k.Quit}
+}
+
+func (k styleKeymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.Quit}, //, k.Select, k.Quit},
+		{k.Left, k.Right, k.Select},
+		// {k.Select, k.Quit},
+	}
+}
+
+func newStyleKeymap() styleKeymap {
+	return styleKeymap{
+		Up: key.NewBinding(
+			key.WithKeys("shift+tab", "up"),
+			key.WithHelp("ShTab/↑", "Up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("tab", "down"),
+			key.WithHelp("tab/↓", "Down"),
+		),
+
+		Left: key.NewBinding(
+			key.WithKeys("left", "h"),
+			key.WithHelp("h/←", "-1"),
+		),
+		Right: key.NewBinding(
+			key.WithKeys("right", "l"),
+			key.WithHelp("l/→", "+1"),
+		),
+		Select: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Toggle"),
+		),
+		Quit: key.NewBinding(
+			key.WithKeys("esc", "ctrl+c"),
+			key.WithHelp("ctrl+c", "Quit"),
+		),
+	}
 }
