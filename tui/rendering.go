@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -9,9 +10,17 @@ import (
 	"golang.org/x/term"
 )
 
-var OverallRender = lipgloss.NewStyle().Align(lipgloss.Center, lipgloss.Center)
-var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Width(100).Height(32)
-var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true)
+const Title = "stylish"
+const Subtitle = "~ Feel pretty in your shell ~"
+
+const ConstWidth = 40
+const ConstHeight = 20
+
+// var OverallRender = lipgloss.NewStyle().Align(lipgloss.Left, lipgloss.Left)
+var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Width(ConstWidth).Height(ConstHeight) //.Width(50).Height(20).Align(lipgloss.Center, lipgloss.Center)
+
+var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true).Italic(true).Foreground(lipgloss.Color("purple"))
+var SubtitleStyle = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("#888888"))
 
 var FocusedAreaStyle = textarea.Style{}
 
@@ -26,14 +35,14 @@ func GetTermSize() (int, int) {
 }
 
 func CenterHorz(msg string) string {
-	w, _ := GetTermSize()
-
-	return lipgloss.PlaceHorizontal(w, lipgloss.Center, msg)
+	return lipgloss.PlaceHorizontal(ConstWidth+1, lipgloss.Center, msg)
 
 }
 
 func Center(msg string) string {
-	w, h := GetTermSize()
+	return lipgloss.Place(ConstWidth, ConstHeight, lipgloss.Center, lipgloss.Center, msg)
+}
 
-	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, msg)
+func ProgramHeader() string {
+	return CenterHorz(fmt.Sprintf("%v\n%v\n", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
 }

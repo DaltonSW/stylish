@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,6 +21,62 @@ var (
 	noStyle      = lipgloss.NewStyle()
 	helpStyle    = blurredStyle
 )
+
+type styleKeymap struct {
+	Up     key.Binding
+	Down   key.Binding
+	Select key.Binding
+	Quit   key.Binding
+
+	Delete key.Binding
+	Create key.Binding
+	Filter key.Binding
+}
+
+func (k styleKeymap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Select}
+}
+
+func (k styleKeymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.Select},
+		// {k.Create, k.Delete, k.Filter}, //, k.Quit},
+		// {k.Quit, k.Filter},
+	}
+}
+
+func newStyleKeymap() styleKeymap {
+	return styleKeymap{
+		Up: key.NewBinding(
+			key.WithKeys("tab", "up"),
+			key.WithHelp("tab/↑", "Up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("shift+tab", "down"),
+			key.WithHelp("shift+tab/↓", "Down"),
+		),
+		Select: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Toggle"),
+		),
+		// Quit: key.NewBinding(
+		// 	key.WithKeys("q", "esc", "ctrl+c"),
+		// 	key.WithHelp("ctrl+c", "Quit"),
+		// ),
+		// Delete: key.NewBinding(
+		// 	key.WithKeys("d", "x"),
+		// 	key.WithHelp("d", "Delete Style"),
+		// ),
+		// Create: key.NewBinding(
+		// 	key.WithKeys("n"),
+		// 	key.WithHelp("n", "New Style"),
+		// ),
+		// Filter: key.NewBinding(
+		// 	key.WithKeys("/"),
+		// 	key.WithHelp("/", "Filter"),
+		// ),
+	}
+}
 
 var ControlOrder []string = []string{
 	"Bold",
@@ -49,11 +107,14 @@ type StyleModel struct {
 
 	Focused int
 
-	ViewWidth  int
-	ViewHeight int
+	keymap styleKeymap
+	help   help.Model
 }
 
-func NewStyleEditModel(themeName, styleName string, viewWidth, viewHeight int) StyleModel {
+func NewStyleEditModel(themeName, styleName string) StyleModel {
+	helpModel := help.New()
+	helpModel.ShowAll = true
+
 	nameInput := textinput.New()
 	// nameInput.Focus()
 	nameInput.Placeholder = "Style Name"
@@ -77,6 +138,8 @@ func NewStyleEditModel(themeName, styleName string, viewWidth, viewHeight int) S
 			FileTypes: newStyle.FileTypes,
 			FileArea:  fileArea,
 			NameInput: nameInput,
+			keymap:    newStyleKeymap(),
+			help:      helpModel,
 		}
 
 	}
@@ -88,13 +151,13 @@ func NewStyleEditModel(themeName, styleName string, viewWidth, viewHeight int) S
 	fileArea.Blur()
 
 	return StyleModel{
-		Theme:      themeName,
-		NameInput:  nameInput,
-		ForeColor:  foreSlider,
-		BackColor:  backSlider,
-		ViewWidth:  viewWidth,
-		ViewHeight: viewHeight,
-		FileArea:   fileArea,
+		Theme:     themeName,
+		NameInput: nameInput,
+		ForeColor: foreSlider,
+		BackColor: backSlider,
+		FileArea:  fileArea,
+		keymap:    newStyleKeymap(),
+		help:      helpModel,
 	}
 }
 
@@ -152,9 +215,9 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					FileTypes: strings.Split(m.FileArea.Value(), "\n"),
 				}
 				config.SaveStyle(styleToSave)
-				return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
+				return NewThemeModel(m.Theme), nil
 			case "Discard":
-				return NewThemeModel(m.Theme, m.ViewWidth, m.ViewHeight), nil
+				return NewThemeModel(m.Theme), nil
 			}
 		case "left", "right":
 			// Adjust sliders
@@ -164,10 +227,6 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.BackColor = clamp(m.BackColor+sliderAdjustment(msg.String()), -1, 255)
 			}
 		}
-	case tea.WindowSizeMsg:
-		m.ViewWidth = msg.Width
-		m.ViewHeight = msg.Height
-
 	}
 
 	var cmd tea.Cmd
@@ -181,19 +240,25 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m StyleModel) View() string {
-	return Center(fmt.Sprintf(
-		"%v\n\n"+
-			"%v\n\n"+
-			"%v\n\n"+
-			"%v\n\n"+
-			"%v\n\n"+
-			"%v\n\n",
-		m.renderName(),
-		m.renderStyles(),
-		m.renderSliders(),
-		m.renderPreview(),
-		m.renderFileArea(),
-		m.renderButtons()))
+	msgBody :=
+		fmt.Sprintf(
+			"%v\n\n"+ // Style name
+				"%v\n\n"+ // Style options
+				"%v\n\n"+ // Color sliders
+				"%v\n\n"+ // File preview
+				"%v\n\n"+ // Filetypes
+				"%v\n\n"+ // Selection Buttons
+				"%v\n\n", // Help keymap
+			m.renderName(),
+			m.renderStyles(),
+			m.renderSliders(),
+			m.renderPreview(),
+			m.renderFileArea(),
+			m.renderButtons(),
+			CenterHorz(m.help.View(m.keymap)),
+		)
+
+	return fmt.Sprintf("%v\n%v", ProgramHeader(), ViewportBorder.Render(msgBody))
 }
 
 func (m StyleModel) renderName() string {
@@ -216,19 +281,19 @@ func (m StyleModel) renderSliders() string {
 	var foreStr string
 	var backStr string
 	if ControlOrder[m.Focused] == "Fore" {
-		foreStr = focusedStyle.Render(" > Foreground:") + " %v [%03d]"
-		backStr = "   Background: %v [%03d]"
+		foreStr = focusedStyle.Render(" > Foreground") + " [%03d]\n%v"
+		backStr = "   Background [%03d]\n%v"
 	} else if ControlOrder[m.Focused] == "Back" {
-		foreStr = "   Foreground: %v [%03d]"
-		backStr = focusedStyle.Render(" > Background:") + " %v [%03d]"
+		foreStr = "   Foreground [%03d]\n%v"
+		backStr = focusedStyle.Render(" > Background") + " [%03d]\n%v"
 	} else {
-		foreStr = "   Foreground: %v [%03d]"
-		backStr = "   Background: %v [%03d]"
+		foreStr = "   Foreground [%03d]\n%v"
+		backStr = "   Background [%03d]\n%v"
 	}
-	foreStr = fmt.Sprintf(foreStr, renderSlider(m.ForeColor, m.ViewWidth/2), m.ForeColor)
-	backStr = fmt.Sprintf(backStr, renderSlider(m.BackColor, m.ViewWidth/2), m.BackColor)
+	foreStr = fmt.Sprintf(foreStr, m.ForeColor, renderSlider(m.ForeColor, ConstWidth-4))
+	backStr = fmt.Sprintf(backStr, m.BackColor, renderSlider(m.BackColor, ConstWidth-4))
 
-	return CenterHorz(fmt.Sprintf(TitleStyle.Render("Colors")+"\n\n%v\n%v", foreStr, backStr))
+	return CenterHorz(fmt.Sprintf(TitleStyle.Render("Colors")+"\n\n%v\n\n%v", foreStr, backStr))
 }
 
 func (m StyleModel) renderPreview() string {

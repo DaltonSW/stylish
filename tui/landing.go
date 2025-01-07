@@ -6,10 +6,72 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+type landingKeymap struct {
+	Up     key.Binding
+	Down   key.Binding
+	Select key.Binding
+	Quit   key.Binding
+
+	Delete   key.Binding
+	Create   key.Binding
+	Generate key.Binding
+	Filter   key.Binding
+}
+
+func (k landingKeymap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete, k.Generate}
+}
+
+func (k landingKeymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.Select, k.Quit},
+		{k.Create, k.Delete, k.Generate, k.Filter},
+	}
+}
+
+func newLandingKeymap() landingKeymap {
+	return landingKeymap{
+		Up: key.NewBinding(
+			key.WithKeys("k", "up"),
+			key.WithHelp("k/↑", "Up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("j", "down"),
+			key.WithHelp("j/↓", "Down"),
+		),
+		Select: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Select"),
+		),
+		Quit: key.NewBinding(
+			key.WithKeys("q", "esc", "ctrl+c"),
+			key.WithHelp("ctrl+c", "Quit"),
+		),
+		Delete: key.NewBinding(
+			key.WithKeys("d", "x"),
+			key.WithHelp("d", "Delete Theme"),
+		),
+		Create: key.NewBinding(
+			key.WithKeys("n"),
+			key.WithHelp("n", "New Theme"),
+		),
+		Generate: key.NewBinding(
+			key.WithKeys("g"),
+			key.WithHelp("g", "Generate File"),
+		),
+		Filter: key.NewBinding(
+			key.WithKeys("/"),
+			key.WithHelp("/", "Filter"),
+		),
+	}
+}
 
 type LandingModel struct {
 	Title        string
@@ -18,6 +80,9 @@ type LandingModel struct {
 	ThemeInput   textinput.Model
 	InputActive  bool
 	DeleteActive bool
+
+	keys landingKeymap
+	help help.Model
 }
 
 type ThemeItem string
@@ -30,8 +95,8 @@ var UserConfig, _ = os.UserConfigDir()
 
 var ColorGenConfig = fmt.Sprintf("%v/colorgen", UserConfig)
 
-func NewLandingModel(width, height int) LandingModel {
-	ViewportBorder.Width(width).Height(height)
+// func NewLandingModel(width, height int) LandingModel {
+func NewLandingModel() LandingModel {
 	themeNames := GetAllThemeNames()
 	themeList := make([]list.Item, 0, len(themeNames))
 	for _, name := range themeNames {
@@ -40,23 +105,31 @@ func NewLandingModel(width, height int) LandingModel {
 		}
 		themeList = append(themeList, list.Item(GetTheme(name)))
 	}
-	l := list.New(themeList, list.NewDefaultDelegate(), width, height)
+	l := list.New(themeList, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
+	l.SetStatusBarItemName("theme", "themes")
 	l.Title = "Select Theme To Edit"
+	l.SetShowHelp(false)
 
 	themeInput := textinput.New()
 	themeInput.Placeholder = "Theme Name"
 
+	newHelp := help.New()
+	newHelp.ShowAll = true
+
 	return LandingModel{
 		Title:      "ColorGen",
-		Subtitle:   "Put the glam in your term",
+		Subtitle:   "~ Put the glam in your term ~",
 		ThemeList:  l,
 		ThemeInput: themeInput,
+
+		keys: newLandingKeymap(),
+		help: newHelp,
 	}
 
 }
 
 func (m LandingModel) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -67,11 +140,11 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.InputActive {
 				m.createTheme(m.ThemeInput.Value())
 				m.ThemeInput.Blur()
-				return NewThemeModel(m.ThemeInput.Value(), m.ThemeList.Width(), m.ThemeList.Height()), nil
+				return NewThemeModel(m.ThemeInput.Value()), nil
 
 			} else {
 				selected := m.ThemeList.SelectedItem().(list.DefaultItem).Title()
-				return NewThemeModel(selected, m.ThemeList.Width(), m.ThemeList.Height()), nil
+				return NewThemeModel(selected), nil
 			}
 		case "d":
 			if !m.InputActive && !m.DeleteActive {
@@ -87,7 +160,7 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "g":
 			selected := m.ThemeList.SelectedItem().(list.DefaultItem).Title()
-			newModel := NewThemeModel(selected, m.ThemeList.Width(), m.ThemeList.Height())
+			newModel := NewThemeModel(selected)
 			err := newModel.GenerateDirColors()
 			if err != nil {
 				log.Fatal(err)
@@ -112,9 +185,9 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.WindowSizeMsg:
-		m.ThemeList.SetWidth(msg.Width / 2)
-		m.ThemeList.SetHeight(msg.Height / 2)
-		ViewportBorder.Width(m.ThemeList.Width() + 2).Height(m.ThemeList.Height() + 2)
+		// m.ThemeList.SetWidth(msg.Width / 2)
+		// m.ThemeList.SetHeight(msg.Height / 2)
+		// ViewportBorder.Width(m.ThemeList.Width() + 2).Height(m.ThemeList.Height() + 2)
 	}
 	var cmd tea.Cmd
 	if m.InputActive {
@@ -129,14 +202,10 @@ func (m LandingModel) View() string {
 	if m.InputActive {
 		return Center(ViewportBorder.Render(m.ThemeInput.View()))
 	} else if m.DeleteActive {
-		return ViewportBorder.Render("Delete this theme? (y/n)")
+		return Center(ViewportBorder.Render("Delete this theme? (y/n)"))
 	} else {
-		return Center(fmt.Sprintf("%v\n%v", m.getHeader(), ViewportBorder.Render(m.ThemeList.View())))
+		return fmt.Sprintf("%v\n%v", ProgramHeader(), ViewportBorder.Render(m.ThemeList.View()+"\n"+CenterHorz(m.help.View(m.keys))))
 	}
-}
-
-func (m LandingModel) getHeader() string {
-	return fmt.Sprintf("%v\n\n%v\n", m.Title, m.Subtitle)
 }
 
 func getThemes() []list.Item {
