@@ -23,7 +23,7 @@ func (t Theme) Description() string { return "" }
 func GetAllThemeNames() []string {
 	var outNames []string
 
-	dir, _ := os.ReadDir(ColorGenConfig)
+	dir, _ := os.ReadDir(ThemeConfigFolder)
 
 	for _, thing := range dir {
 		if thing.IsDir() {
@@ -42,7 +42,7 @@ func GetTheme(name string) *Theme {
 
 	outTheme := &Theme{
 		Name: name,
-		Path: filepath.Join(ColorGenConfig, name),
+		Path: filepath.Join(ThemeConfigFolder, name),
 	}
 
 	if _, err := os.Stat(outTheme.Path); os.IsNotExist(err) {
@@ -66,7 +66,7 @@ func (t *Theme) LoadStyles() {
 
 func (t *Theme) GenerateTheme() error {
 
-	path := filepath.Join(ColorGenConfig, t.Name)
+	path := filepath.Join(ThemeConfigFolder, t.Name)
 	file, err := os.Create(filepath.Join(path, ".dircolors"))
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func GetStyle(themeName, styleName string) *Style {
 }
 
 func loadStyle(theme, styleName string) *Style {
-	file, err := os.Open(filepath.Join(ColorGenConfig, theme, styleName+".yaml"))
+	file, err := os.Open(filepath.Join(ThemeConfigFolder, theme, styleName+".yaml"))
 	if err != nil {
 		return nil
 	}
@@ -126,7 +126,7 @@ func loadStyle(theme, styleName string) *Style {
 }
 
 func SaveStyle(style Style) error {
-	path := filepath.Join(ColorGenConfig, style.Theme)
+	path := filepath.Join(ThemeConfigFolder, style.Theme)
 	file, err := os.Create(filepath.Join(path, style.Name+".yaml"))
 	if err != nil {
 		return err

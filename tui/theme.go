@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,6 +90,7 @@ func (s StyleItem) Description() string { return "" }
 func NewThemeModel(theme string) ThemeModel {
 	newHelp := help.New()
 	newHelp.ShowAll = true
+	newHelp.Width = ConstWidth
 	model := ThemeModel{
 		ThemeName: theme,
 		help:      newHelp,
@@ -106,6 +106,7 @@ func NewThemeModel(theme string) ThemeModel {
 	list.Title = "Manage Styles for " + theme
 	list.SetStatusBarItemName("style", "styles")
 	list.SetShowHelp(false)
+	list.SetShowTitle(false)
 
 	input := textinput.New()
 	input.Placeholder = "New Style Name"
@@ -134,7 +135,6 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return NewStyleEditModel(m.ThemeName, m.NameInput.Value()), nil
 
 			} else {
-
 				return NewStyleEditModel(m.ThemeName, m.StyleList.SelectedItem().(list.DefaultItem).Title()), nil
 			}
 		case "n":
@@ -163,18 +163,15 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ThemeModel) View() string {
 	if m.InputActive {
-		return m.NameInput.View()
-		// return Center(ViewportBorder.Render(m.NameInput.View()))
+		return RenderModel(m.NameInput.View(), "")
 	} else {
-		return fmt.Sprintf("%v\n%v", ProgramHeader(), ViewportBorder.Render(m.StyleList.View()+"\n"+CenterHorz(m.help.View(m.keys))))
-		// return ProgramHeader() + "\n" + ViewportBorder.Render(m.StyleList.View()+"\n"+m.help.View(m.keys))
-		// return Center(ViewportBorder.Render(m.StyleList.View()))
+		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.ThemeName))
+		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(m.keys))
 	}
 }
 
 func (m ThemeModel) GenerateDirColors() error {
-
-	path := filepath.Join(ColorGenConfig, m.ThemeName)
+	path := filepath.Join(ThemeConfigFolder, m.ThemeName)
 	file, err := os.Create(filepath.Join(path, ".dircolors"))
 	if err != nil {
 		return err
@@ -193,7 +190,7 @@ func (m ThemeModel) GenerateDirColors() error {
 func (m ThemeModel) getStyles() []string {
 	var outFiles []string
 
-	themeDir := filepath.Join(ColorGenConfig, m.ThemeName)
+	themeDir := filepath.Join(ThemeConfigFolder, m.ThemeName)
 
 	os.MkdirAll(themeDir, 0755)
 

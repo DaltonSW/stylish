@@ -11,15 +11,14 @@ import (
 )
 
 const Title = "stylish"
-const Subtitle = "~ Feel pretty in your shell ~"
+const Subtitle = "~ Feel beautiful in your shell ~"
 
-const ConstWidth = 40
-const ConstHeight = 20
+const ConstWidth = 45
+const ConstHeight = 27
 
-// var OverallRender = lipgloss.NewStyle().Align(lipgloss.Left, lipgloss.Left)
 var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Width(ConstWidth).Height(ConstHeight) //.Width(50).Height(20).Align(lipgloss.Center, lipgloss.Center)
 
-var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true).Italic(true).Foreground(lipgloss.Color("purple"))
+var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true).Italic(true)
 var SubtitleStyle = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("#888888"))
 
 var FocusedAreaStyle = textarea.Style{}
@@ -44,5 +43,9 @@ func Center(msg string) string {
 }
 
 func ProgramHeader() string {
-	return CenterHorz(fmt.Sprintf("%v\n%v\n", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
+	return CenterHorz(fmt.Sprintf("%v\n%v", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
+}
+
+func RenderModel(body, footer string) string {
+	return Center(fmt.Sprintf("%v\n%v", ProgramHeader(), ViewportBorder.Render(fmt.Sprintf("%v\n%v", body, CenterHorz(footer)))))
 }

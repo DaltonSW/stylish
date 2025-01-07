@@ -93,9 +93,8 @@ func (t ThemeItem) Description() string { return "" }
 
 var UserConfig, _ = os.UserConfigDir()
 
-var ColorGenConfig = fmt.Sprintf("%v/colorgen", UserConfig)
+var ThemeConfigFolder = fmt.Sprintf("%v/stylish", UserConfig)
 
-// func NewLandingModel(width, height int) LandingModel {
 func NewLandingModel() LandingModel {
 	themeNames := GetAllThemeNames()
 	themeList := make([]list.Item, 0, len(themeNames))
@@ -108,6 +107,7 @@ func NewLandingModel() LandingModel {
 	l := list.New(themeList, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
 	l.SetStatusBarItemName("theme", "themes")
 	l.Title = "Select Theme To Edit"
+	l.SetShowTitle(false)
 	l.SetShowHelp(false)
 
 	themeInput := textinput.New()
@@ -115,10 +115,9 @@ func NewLandingModel() LandingModel {
 
 	newHelp := help.New()
 	newHelp.ShowAll = true
+	newHelp.Width = ConstWidth
 
 	return LandingModel{
-		Title:      "ColorGen",
-		Subtitle:   "~ Put the glam in your term ~",
 		ThemeList:  l,
 		ThemeInput: themeInput,
 
@@ -184,10 +183,6 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 		}
-	case tea.WindowSizeMsg:
-		// m.ThemeList.SetWidth(msg.Width / 2)
-		// m.ThemeList.SetHeight(msg.Height / 2)
-		// ViewportBorder.Width(m.ThemeList.Width() + 2).Height(m.ThemeList.Height() + 2)
 	}
 	var cmd tea.Cmd
 	if m.InputActive {
@@ -204,16 +199,17 @@ func (m LandingModel) View() string {
 	} else if m.DeleteActive {
 		return Center(ViewportBorder.Render("Delete this theme? (y/n)"))
 	} else {
-		return fmt.Sprintf("%v\n%v", ProgramHeader(), ViewportBorder.Render(m.ThemeList.View()+"\n"+CenterHorz(m.help.View(m.keys))))
+		listHeader := CenterHorz(TitleStyle.Render("Current Themes") + "\n" + SubtitleStyle.Render(ThemeConfigFolder))
+		return RenderModel(listHeader+"\n"+m.ThemeList.View(), m.help.View(m.keys))
 	}
 }
 
 func getThemes() []list.Item {
 	var themes []list.Item
 
-	os.MkdirAll(ColorGenConfig+"/default", 0755)
+	os.MkdirAll(ThemeConfigFolder+"/default", 0755)
 
-	dir, _ := os.ReadDir(ColorGenConfig)
+	dir, _ := os.ReadDir(ThemeConfigFolder)
 
 	for _, thing := range dir {
 		if thing.IsDir() {
@@ -225,14 +221,14 @@ func getThemes() []list.Item {
 }
 
 func (m *LandingModel) createTheme(name string) {
-	path := filepath.Join(ColorGenConfig, name)
+	path := filepath.Join(ThemeConfigFolder, name)
 	if err := os.MkdirAll(path, 0755); err != nil {
 		fmt.Printf("Error creating theme folder: %v\n", err)
 	}
 }
 
 func (m *LandingModel) deleteTheme(name string) {
-	path := filepath.Join(ColorGenConfig, name)
+	path := filepath.Join(ThemeConfigFolder, name)
 	if err := os.RemoveAll(path); err != nil {
 		fmt.Printf("Error deleting theme folder: %v\n", err)
 	}
