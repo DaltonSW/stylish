@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 )
 
 type ThemeModel struct {
@@ -21,18 +22,13 @@ type ThemeModel struct {
 	help help.Model
 }
 
-type StyleItem string
-
-func (s StyleItem) FilterValue() string { return string(s) }
-func (s StyleItem) Title() string       { return string(s) }
-func (s StyleItem) Description() string { return "" }
-
 func NewThemeModel(theme Theme) ThemeModel {
 	newHelp := help.New()
 	newHelp.ShowAll = true
 	newHelp.Width = ConstWidth
 	var styles []list.Item
 	for _, style := range theme.Styles {
+		log.Debug(style)
 		styles = append(styles, list.Item(style))
 	}
 	list := list.New(styles, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
@@ -68,10 +64,10 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					break
 				}
 				m.NameInput.Blur()
-				return NewStyleEditModel(m.Theme, *GetStyle(m.Theme.Name, m.NameInput.Value())), nil
+				return NewStyleEditModel(m.Theme, GetStyle(m.Theme.Name, m.NameInput.Value())), nil
 
 			} else {
-				return NewStyleEditModel(m.Theme, *m.StyleList.SelectedItem().(*Style)), nil
+				return NewStyleEditModel(m.Theme, m.StyleList.SelectedItem().(Style)), nil
 			}
 		case "n":
 			if !m.InputActive {

@@ -128,7 +128,8 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "Blink":
 				m.style.Blink = !m.style.Blink
 			case "Save":
-				SaveStyle(m.style)
+				m.style.SaveStyle()
+				m.theme.ReplaceStyle(m.style)
 				return NewThemeModel(m.theme), nil
 			case "Discard":
 				return NewThemeModel(m.theme), nil

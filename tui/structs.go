@@ -19,7 +19,7 @@ var ThemeConfigFolder = filepath.Join(UserConfig, "stylish")
 type Theme struct {
 	Name   string
 	Path   string
-	Styles []*Style
+	Styles []Style
 }
 
 // These functions fullfil the tea.DefaultItemValue interface
@@ -37,7 +37,7 @@ func GetAllThemes() []Theme {
 	for _, thing := range dir {
 		if thing.IsDir() {
 			log.Debugf("Dir found %v\n", thing.Name())
-			outThemes = append(outThemes, *GetTheme(thing.Name()))
+			outThemes = append(outThemes, GetTheme(thing.Name()))
 		}
 	}
 
@@ -46,12 +46,12 @@ func GetAllThemes() []Theme {
 
 // GetTheme will get the theme of a given name. If the provided name
 // doesn't exist, a folder for that theme will be created.
-func GetTheme(name string) *Theme {
+func GetTheme(name string) Theme {
 	if name == "" {
-		return nil
+		log.Fatal("Tried to create a theme with an empty name.")
 	}
 
-	outTheme := &Theme{
+	outTheme := Theme{
 		Name: name,
 		Path: filepath.Join(ThemeConfigFolder, name),
 	}
@@ -62,13 +62,15 @@ func GetTheme(name string) *Theme {
 
 	log.Debugf("Theme created: %v", name)
 
-	outTheme.LoadStyles()
+	outTheme.Styles = outTheme.LoadStyles()
 
 	return outTheme
 }
 
 // LoadStyles will load all of the styles for a given theme
-func (t *Theme) LoadStyles() {
+func (t Theme) LoadStyles() []Style {
+	var outStyles []Style
+
 	log.Debugf("Trying to load styles for %v", t.Name)
 	dir, err := os.ReadDir(t.Path)
 
@@ -85,29 +87,42 @@ func (t *Theme) LoadStyles() {
 			}
 			defer styleFile.Close()
 
-			var style *Style
+			var style Style
 			name := strings.TrimSuffix(thing.Name(), ".yaml")
 
 			fileStat, _ := styleFile.Stat()
 			if fileStat.Size() == 0 {
 				style = NewStyle(t.Name, name)
 			} else {
+				var outStyle *Style
 				decoder := yaml.NewDecoder(styleFile)
-				if err := decoder.Decode(&style); err != nil {
+				if err := decoder.Decode(&outStyle); err != nil {
 					log.Fatal(err)
 				}
-				if style == nil {
+				if outStyle == nil {
 					style = NewStyle(t.Name, name)
+				} else {
+					style = *outStyle
 				}
 			}
 
-			t.Styles = append(t.Styles, style)
+			outStyles = append(outStyles, style)
+		}
+	}
+
+	return outStyles
+}
+
+func (t *Theme) ReplaceStyle(style Style) {
+	for i, s := range t.Styles {
+		if s.Name == style.Name {
+			t.Styles[i] = style
 		}
 	}
 }
 
 // GenerateDirColors will convert all of a theme's styles into an output file
-func (t *Theme) GenerateDirColors() error {
+func (t Theme) GenerateDirColors() error {
 
 	path := filepath.Join(ThemeConfigFolder, t.Name)
 	file, err := os.Create(filepath.Join(path, ".dircolors"))
@@ -142,8 +157,8 @@ func (s Style) FilterValue() string { return s.Name }
 func (s Style) Title() string       { return s.Name }
 func (s Style) Description() string { return "" }
 
-func NewStyle(themeName, styleName string) *Style {
-	return &Style{
+func NewStyle(themeName, styleName string) Style {
+	return Style{
 		Theme:     themeName,
 		Name:      styleName,
 		Fore:      -1,
@@ -152,14 +167,17 @@ func NewStyle(themeName, styleName string) *Style {
 	}
 }
 
-func GetStyle(theme, styleName string) *Style {
+func GetStyle(theme, styleName string) Style {
 	themePath := filepath.Join(ThemeConfigFolder, theme)
+	var outStyle Style
 	style := loadStyle(themePath, styleName)
 	if style == nil {
-		style = NewStyle(theme, styleName)
+		outStyle = NewStyle(theme, styleName)
+	} else {
+		outStyle = *style
 	}
 
-	return style
+	return outStyle
 }
 
 func loadStyle(theme, styleName string) *Style {
@@ -178,17 +196,20 @@ func loadStyle(theme, styleName string) *Style {
 	return style
 }
 
-func SaveStyle(style Style) error {
-	path := filepath.Join(ThemeConfigFolder, style.Theme)
-	file, err := os.Create(filepath.Join(path, style.Name+".yaml"))
+func (s Style) SaveStyle() {
+	path := filepath.Join(ThemeConfigFolder, s.Theme)
+	file, err := os.Create(filepath.Join(path, s.Name+".yaml"))
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	defer file.Close()
 
 	encoder := yaml.NewEncoder(file)
-	return encoder.Encode(style)
+	err = encoder.Encode(s)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (s Style) GetDirColorBlock() string {
