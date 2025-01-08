@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 )
 
 type landingKeymap struct {
@@ -84,6 +84,7 @@ type LandingModel struct {
 }
 
 func NewLandingModel() LandingModel {
+	log.Debug("Trying to create landing model")
 	themes := GetAllThemes()
 	var items []list.Item
 	for _, t := range themes {
@@ -122,12 +123,11 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.InputActive {
-				m.createTheme(m.ThemeInput.Value())
 				m.ThemeInput.Blur()
-				return NewThemeModel(m.ThemeInput.Value()), nil
+				return NewThemeModel(*GetTheme(m.ThemeInput.Value())), nil
 
 			} else {
-				selected := m.ThemeList.SelectedItem().(list.DefaultItem).Title()
+				selected := m.ThemeList.SelectedItem().(Theme)
 				return NewThemeModel(selected), nil
 			}
 		case "d":
@@ -143,9 +143,8 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "g":
-			selected := m.ThemeList.SelectedItem().(list.DefaultItem).Title()
-			newModel := NewThemeModel(selected)
-			err := newModel.GenerateDirColors()
+			selected := m.ThemeList.SelectedItem().(Theme)
+			err := selected.GenerateDirColors()
 			if err != nil {
 				log.Fatal(err)
 			}

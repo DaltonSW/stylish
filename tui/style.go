@@ -125,7 +125,7 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return NewThemeModel(m.Theme), nil
+			return NewThemeModel(*GetTheme(m.Theme)), nil
 		case "tab", "down", "shift+tab", "up":
 			if msg.String() == "tab" || msg.String() == "down" {
 
@@ -166,9 +166,9 @@ func (m StyleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					FileTypes: strings.Split(m.FileArea.Value(), "\n"),
 				}
 				SaveStyle(styleToSave)
-				return NewThemeModel(m.Theme), nil
+				return NewThemeModel(*GetTheme(m.Theme)), nil
 			case "Discard":
-				return NewThemeModel(m.Theme), nil
+				return NewThemeModel(*GetTheme(m.Theme)), nil
 			}
 		case "left", "right":
 			// Adjust sliders

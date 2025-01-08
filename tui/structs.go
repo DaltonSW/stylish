@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/charmbracelet/log"
 )
 
 var UserConfig, _ = os.UserConfigDir()
@@ -27,13 +29,14 @@ func (t Theme) Description() string { return fmt.Sprintf("Styles loaded: %v", le
 
 // GetAllThemes will return a slice containing all Themes
 func GetAllThemes() []Theme {
-
+	log.Debug("Trying to get all themes\n")
 	var outThemes []Theme
 
 	dir, _ := os.ReadDir(ThemeConfigFolder)
 
 	for _, thing := range dir {
 		if thing.IsDir() {
+			log.Debugf("Dir found %v\n", thing.Name())
 			outThemes = append(outThemes, *GetTheme(thing.Name()))
 		}
 	}
@@ -57,6 +60,8 @@ func GetTheme(name string) *Theme {
 		os.Mkdir(outTheme.Path, 0755)
 	}
 
+	log.Debugf("Theme created: %v", name)
+
 	outTheme.LoadStyles()
 
 	return outTheme
@@ -64,17 +69,45 @@ func GetTheme(name string) *Theme {
 
 // LoadStyles will load all of the styles for a given theme
 func (t *Theme) LoadStyles() {
-	dir, _ := os.ReadDir(t.Path)
+	log.Debugf("Trying to load styles for %v", t.Name)
+	dir, err := os.ReadDir(t.Path)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for _, thing := range dir {
-		if thing.IsDir() {
-			t.Styles = append(t.Styles, GetStyle(t.Name, thing.Name()))
+		log.Debugf("- Thing found: %v", thing.Name())
+		if !thing.IsDir() && strings.HasSuffix(thing.Name(), ".yaml") {
+			styleFile, err := os.Open(filepath.Join(t.Path, thing.Name()))
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer styleFile.Close()
+
+			var style *Style
+			name := strings.TrimSuffix(thing.Name(), ".yaml")
+
+			fileStat, _ := styleFile.Stat()
+			if fileStat.Size() == 0 {
+				style = NewStyle(t.Name, name)
+			} else {
+				decoder := yaml.NewDecoder(styleFile)
+				if err := decoder.Decode(&style); err != nil {
+					log.Fatal(err)
+				}
+				if style == nil {
+					style = NewStyle(t.Name, name)
+				}
+			}
+
+			t.Styles = append(t.Styles, style)
 		}
 	}
 }
 
-// GenerateTheme will convert all of a theme's styles into an output file
-func (t *Theme) GenerateTheme() error {
+// GenerateDirColors will convert all of a theme's styles into an output file
+func (t *Theme) GenerateDirColors() error {
 
 	path := filepath.Join(ThemeConfigFolder, t.Name)
 	file, err := os.Create(filepath.Join(path, ".dircolors"))
@@ -104,16 +137,26 @@ type Style struct {
 	FileTypes []string `yaml:"filetypes"`
 }
 
-func GetStyle(themeName, styleName string) *Style {
-	style := loadStyle(themeName, styleName)
+// These functions fullfil the tea.DefaultItemValue interface
+func (s Style) FilterValue() string { return s.Name }
+func (s Style) Title() string       { return s.Name }
+func (s Style) Description() string { return "" }
+
+func NewStyle(themeName, styleName string) *Style {
+	return &Style{
+		Theme:     themeName,
+		Name:      styleName,
+		Fore:      -1,
+		Back:      -1,
+		FileTypes: make([]string, 0),
+	}
+}
+
+func GetStyle(theme, styleName string) *Style {
+	themePath := filepath.Join(ThemeConfigFolder, theme)
+	style := loadStyle(themePath, styleName)
 	if style == nil {
-		style = &Style{
-			Theme:     themeName,
-			Name:      styleName,
-			Fore:      -1,
-			Back:      -1,
-			FileTypes: make([]string, 0),
-		}
+		style = NewStyle(theme, styleName)
 	}
 
 	return style

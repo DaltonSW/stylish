@@ -14,7 +14,7 @@ import (
 )
 
 type ThemeModel struct {
-	ThemeName string
+	Theme     Theme
 	StyleList list.Model
 	Viewport  viewport.Model
 
@@ -31,23 +31,16 @@ func (s StyleItem) FilterValue() string { return string(s) }
 func (s StyleItem) Title() string       { return string(s) }
 func (s StyleItem) Description() string { return "" }
 
-func NewThemeModel(theme string) ThemeModel {
+func NewThemeModel(theme Theme) ThemeModel {
 	newHelp := help.New()
 	newHelp.ShowAll = true
 	newHelp.Width = ConstWidth
-	model := ThemeModel{
-		ThemeName: theme,
-		help:      newHelp,
-		keys:      newThemeKeymap(),
-	}
-	styleFiles := model.getStyles()
-
 	var styles []list.Item
-	for _, file := range styleFiles {
-		styles = append(styles, StyleItem(file))
+	for _, style := range theme.Styles {
+		styles = append(styles, list.Item(style))
 	}
 	list := list.New(styles, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
-	list.Title = "Manage Styles for " + theme
+	list.Title = "Manage Styles for " + theme.Name
 	list.SetStatusBarItemName("style", "styles")
 	list.SetShowHelp(false)
 	list.SetShowTitle(false)
@@ -55,10 +48,13 @@ func NewThemeModel(theme string) ThemeModel {
 	input := textinput.New()
 	input.Placeholder = "New Style Name"
 
-	model.NameInput = input
-	model.StyleList = list
-
-	return model
+	return ThemeModel{
+		Theme:     theme,
+		NameInput: input,
+		StyleList: list,
+		help:      newHelp,
+		keys:      newThemeKeymap(),
+	}
 
 }
 
@@ -76,10 +72,10 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					break
 				}
 				m.NameInput.Blur()
-				return NewStyleEditModel(m.ThemeName, m.NameInput.Value()), nil
+				return NewStyleEditModel(m.Theme.Name, m.NameInput.Value()), nil
 
 			} else {
-				return NewStyleEditModel(m.ThemeName, m.StyleList.SelectedItem().(list.DefaultItem).Title()), nil
+				return NewStyleEditModel(m.Theme.Name, m.StyleList.SelectedItem().(list.DefaultItem).Title()), nil
 			}
 		case "n":
 			if !m.InputActive {
@@ -104,13 +100,13 @@ func (m ThemeModel) View() string {
 	if m.InputActive {
 		return RenderModel(m.NameInput.View(), "")
 	} else {
-		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.ThemeName))
+		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.Theme.Name))
 		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(m.keys))
 	}
 }
 
 func (m ThemeModel) GenerateDirColors() error {
-	path := filepath.Join(ThemeConfigFolder, m.ThemeName)
+	path := filepath.Join(ThemeConfigFolder, m.Theme.Name)
 	file, err := os.Create(filepath.Join(path, ".dircolors"))
 	if err != nil {
 		return err
@@ -118,7 +114,7 @@ func (m ThemeModel) GenerateDirColors() error {
 	defer file.Close()
 
 	for _, styleName := range m.getStyles() {
-		model := NewStyleEditModel(m.ThemeName, styleName)
+		model := NewStyleEditModel(m.Theme.Name, styleName)
 		file.WriteString(model.GetDirColorBlock())
 	}
 
@@ -129,7 +125,7 @@ func (m ThemeModel) GenerateDirColors() error {
 func (m ThemeModel) getStyles() []string {
 	var outFiles []string
 
-	themeDir := filepath.Join(ThemeConfigFolder, m.ThemeName)
+	themeDir := filepath.Join(ThemeConfigFolder, m.Theme.Name)
 
 	os.MkdirAll(themeDir, 0755)
 
