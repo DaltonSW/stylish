@@ -13,66 +13,6 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type landingKeymap struct {
-	Up     key.Binding
-	Down   key.Binding
-	Select key.Binding
-	Quit   key.Binding
-
-	Delete   key.Binding
-	Create   key.Binding
-	Generate key.Binding
-	Filter   key.Binding
-}
-
-func (k landingKeymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete, k.Generate}
-}
-
-func (k landingKeymap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Up, k.Down, k.Select, k.Quit},
-		{k.Create, k.Delete, k.Generate, k.Filter},
-	}
-}
-
-func newLandingKeymap() landingKeymap {
-	return landingKeymap{
-		Up: key.NewBinding(
-			key.WithKeys("k", "up"),
-			key.WithHelp("k/↑", "Up"),
-		),
-		Down: key.NewBinding(
-			key.WithKeys("j", "down"),
-			key.WithHelp("j/↓", "Down"),
-		),
-		Select: key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "Select"),
-		),
-		Quit: key.NewBinding(
-			key.WithKeys("q", "esc", "ctrl+c"),
-			key.WithHelp("ctrl+c", "Quit"),
-		),
-		Delete: key.NewBinding(
-			key.WithKeys("d", "x"),
-			key.WithHelp("d", "Delete Theme"),
-		),
-		Create: key.NewBinding(
-			key.WithKeys("n"),
-			key.WithHelp("n", "New Theme"),
-		),
-		Generate: key.NewBinding(
-			key.WithKeys("g"),
-			key.WithHelp("g", "Generate File"),
-		),
-		Filter: key.NewBinding(
-			key.WithKeys("/"),
-			key.WithHelp("/", "Filter"),
-		),
-	}
-}
-
 type LandingModel struct {
 	ThemeList    list.Model
 	ThemeInput   textinput.Model
@@ -85,6 +25,7 @@ type LandingModel struct {
 
 func NewLandingModel() LandingModel {
 	log.Debug("Trying to create landing model")
+
 	themes := GetAllThemes()
 	var items []list.Item
 	for _, t := range themes {
@@ -124,7 +65,7 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if m.InputActive {
 				m.ThemeInput.Blur()
-				return NewThemeModel(*GetTheme(m.ThemeInput.Value())), nil
+				return NewThemeModel(GetTheme(m.ThemeInput.Value())), nil
 
 			} else {
 				selected := m.ThemeList.SelectedItem().(Theme)
@@ -199,5 +140,65 @@ func (m *LandingModel) deleteTheme(name string) {
 	path := filepath.Join(ThemeConfigFolder, name)
 	if err := os.RemoveAll(path); err != nil {
 		fmt.Printf("Error deleting theme folder: %v\n", err)
+	}
+}
+
+type landingKeymap struct {
+	Up     key.Binding
+	Down   key.Binding
+	Select key.Binding
+	Quit   key.Binding
+
+	Delete   key.Binding
+	Create   key.Binding
+	Generate key.Binding
+	Filter   key.Binding
+}
+
+func (k landingKeymap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete, k.Generate}
+}
+
+func (k landingKeymap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.Select, k.Quit},
+		{k.Create, k.Delete, k.Generate, k.Filter},
+	}
+}
+
+func newLandingKeymap() landingKeymap {
+	return landingKeymap{
+		Up: key.NewBinding(
+			key.WithKeys("k", "up"),
+			key.WithHelp("k/↑", "Up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("j", "down"),
+			key.WithHelp("j/↓", "Down"),
+		),
+		Select: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Select"),
+		),
+		Quit: key.NewBinding(
+			key.WithKeys("q", "esc", "ctrl+c"),
+			key.WithHelp("ctrl+c", "Quit"),
+		),
+		Delete: key.NewBinding(
+			key.WithKeys("d", "x"),
+			key.WithHelp("d", "Delete Theme"),
+		),
+		Create: key.NewBinding(
+			key.WithKeys("n"),
+			key.WithHelp("n", "New Theme"),
+		),
+		Generate: key.NewBinding(
+			key.WithKeys("g"),
+			key.WithHelp("g", "Generate File"),
+		),
+		Filter: key.NewBinding(
+			key.WithKeys("/"),
+			key.WithHelp("/", "Filter"),
+		),
 	}
 }

@@ -27,26 +27,32 @@ func main() {
 			log.Fatalf("Error running program: %v\n", err)
 		}
 		return
+	} else {
+		handleArgs()
 	}
+}
 
+func handleArgs() {
 	// Else, evaluate what the command is asking for
 	// I'm probably only going to have `help`, `generate`, and `apply` as subcommands
 	switch os.Args[1] {
 	case "help":
 		log.Printf("Help command")
+
 	case "generate":
 		if len(os.Args) < 3 {
 			log.Fatal("No theme provided")
 		}
-		theme := os.Args[2]
-		log.Print("Generate command for " + theme)
-		// newModel := tui.NewThemeModel(theme)
-		// err := newModel.GenerateDirColors()
-		// if err != nil {
-		// 	log.Fatal(err)
-		// } else {
-		// 	log.Print("Successfully generated file at " + filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
-		// }
+		themeName := os.Args[2]
+		log.Print("Generate command for " + themeName)
+		theme := tui.GetTheme(themeName)
+		err := theme.GenerateDirColors()
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			log.Print("Successfully generated file at " + filepath.Join(theme.Path, ".dircolors"))
+		}
+
 	case "apply":
 		if len(os.Args) < 3 {
 			log.Fatal("No theme provided")
@@ -61,6 +67,7 @@ func main() {
 		// cmdStr := string(cmdOut)
 		// outStr := strings.TrimPrefix(strings.TrimSuffix(cmdStr, ";\nexport LS_COLORS\n"), "LS_COLORS=")
 		fmt.Print(string(cmdOut))
+
 	default:
 		log.Fatal("Command not found")
 	}
