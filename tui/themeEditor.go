@@ -1,10 +1,6 @@
 package tui
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -72,10 +68,10 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					break
 				}
 				m.NameInput.Blur()
-				return NewStyleEditModel(m.Theme.Name, m.NameInput.Value()), nil
+				return NewStyleEditModel(m.Theme, *GetStyle(m.Theme.Name, m.NameInput.Value())), nil
 
 			} else {
-				return NewStyleEditModel(m.Theme.Name, m.StyleList.SelectedItem().(list.DefaultItem).Title()), nil
+				return NewStyleEditModel(m.Theme, *m.StyleList.SelectedItem().(*Style)), nil
 			}
 		case "n":
 			if !m.InputActive {
@@ -103,41 +99,6 @@ func (m ThemeModel) View() string {
 		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.Theme.Name))
 		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(m.keys))
 	}
-}
-
-func (m ThemeModel) GenerateDirColors() error {
-	path := filepath.Join(ThemeConfigFolder, m.Theme.Name)
-	file, err := os.Create(filepath.Join(path, ".dircolors"))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	for _, styleName := range m.getStyles() {
-		model := NewStyleEditModel(m.Theme.Name, styleName)
-		file.WriteString(model.GetDirColorBlock())
-	}
-
-	return nil
-
-}
-
-func (m ThemeModel) getStyles() []string {
-	var outFiles []string
-
-	themeDir := filepath.Join(ThemeConfigFolder, m.Theme.Name)
-
-	os.MkdirAll(themeDir, 0755)
-
-	dir, _ := os.ReadDir(themeDir)
-
-	for _, thing := range dir {
-		if strings.HasSuffix(thing.Name(), ".yaml") || strings.HasSuffix(thing.Name(), ".yml") {
-			outFiles = append(outFiles, strings.Replace(thing.Name(), ".yaml", "", -1))
-		}
-	}
-
-	return outFiles
 }
 
 type themeKeymap struct {
