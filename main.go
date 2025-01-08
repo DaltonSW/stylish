@@ -2,16 +2,18 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"go.dalton.dog/colorgen/tui"
 )
 
 func main() {
+	// log.SetLevel(log.DebugLevel)
+
 	// Check that dircolors command is installed
 	_, err := exec.LookPath("dircolors")
 	if err != nil {
@@ -22,7 +24,7 @@ func main() {
 	if len(os.Args) == 1 {
 		program := tea.NewProgram(tui.NewLandingModel(), tea.WithAltScreen())
 		if _, err := program.Run(); err != nil {
-			log.Fatalf("Error starting program: %v\n", err)
+			log.Fatalf("Error running program: %v\n", err)
 		}
 		return
 	}
@@ -38,13 +40,13 @@ func main() {
 		}
 		theme := os.Args[2]
 		log.Print("Generate command for " + theme)
-		newModel := tui.NewThemeModel(theme)
-		err := newModel.GenerateDirColors()
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			log.Print("Successfully generated file at " + filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
-		}
+		// newModel := tui.NewThemeModel(theme)
+		// err := newModel.GenerateDirColors()
+		// if err != nil {
+		// 	log.Fatal(err)
+		// } else {
+		// 	log.Print("Successfully generated file at " + filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
+		// }
 	case "apply":
 		if len(os.Args) < 3 {
 			log.Fatal("No theme provided")
