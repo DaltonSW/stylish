@@ -34,6 +34,7 @@ func NewLandingModel() LandingModel {
 
 	l := list.New(items, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
 	l.SetStatusBarItemName("theme", "themes")
+	l.SetShowStatusBar(false)
 	l.SetShowTitle(false)
 	l.SetShowHelp(false)
 
