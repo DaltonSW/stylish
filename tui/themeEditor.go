@@ -31,7 +31,8 @@ func NewThemeModel(theme Theme) ThemeModel {
 		log.Debug(style)
 		styles = append(styles, list.Item(style))
 	}
-	list := list.New(styles, list.NewDefaultDelegate(), ConstWidth, ConstHeight)
+	del := GetItemDelgate()
+	list := list.New(styles, del, ConstWidth, ConstHeight)
 	list.Title = "Manage Styles for " + theme.Name
 	list.SetStatusBarItemName("style", "styles")
 	list.SetShowHelp(false)
