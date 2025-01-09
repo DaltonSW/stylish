@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
@@ -13,7 +14,7 @@ import (
 const Title = "stylish"
 const Subtitle = "~ Feel beautiful in your shell ~"
 
-const ConstWidth = 45
+const ConstWidth = 34
 const ConstHeight = 27
 
 var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Width(ConstWidth).Height(ConstHeight) //.Width(50).Height(20).Align(lipgloss.Center, lipgloss.Center)
@@ -24,6 +25,20 @@ var SubtitleStyle = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("
 var FocusedAreaStyle = textarea.Style{}
 
 var BlurredAreaStyle = textarea.Style{}
+
+func GetItemDelgate() (del list.DefaultDelegate) {
+	del = list.NewDefaultDelegate()
+	styles := list.NewDefaultItemStyles()
+
+	styles.SelectedTitle = lipgloss.NewStyle().Padding(0, 0, 0, 2)
+	styles.SelectedDesc = lipgloss.NewStyle().Padding(0, 0, 0, 2)
+
+	del.Styles = styles
+
+	del.SetHeight(4)
+
+	return del
+}
 
 func GetTermSize() (int, int) {
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))

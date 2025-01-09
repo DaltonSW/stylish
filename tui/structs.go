@@ -9,6 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
 
@@ -153,9 +154,66 @@ type Style struct {
 }
 
 // These functions fullfil the tea.DefaultItemValue interface
+func (s Style) Title() string {
+	return lipgloss.PlaceHorizontal(lipgloss.Width(s.Description()), lipgloss.Center, s.getPreview(s.Name))
+}
+
+func (s Style) Description() string {
+	boxes := s.getCheckboxes()
+	topLine := fmt.Sprintf("%v | %v | %v", boxes["Bold"], boxes["Under"], boxes["Blink"])
+	// midLine := fmt.Sprintf("Fore: #%v | Back: #%v", s.Fore, s.Back)
+	midLine := "Fore: #456123 | Back: #789789"
+	botLine := fmt.Sprintf("Filetypes: %v", len(s.FileTypes))
+	// return fmt.Sprintf(outStr, checkboxes["Bold"], checkboxes["Under"], checkboxes["Blink"], s.Fore, s.Back, s.getPreview("preview.txt"))
+	w := lipgloss.Width(midLine)
+	outStr := fmt.Sprintf("%v\n%v\n%v\n", center(topLine, w), center(midLine, w), center(botLine, w))
+	// return lipgloss.PlaceHorizontal(lipgloss.Width(midLine), lipgloss.Center, outStr)
+	return outStr
+}
+
+func center(s string, w int) string {
+	return lipgloss.PlaceHorizontal(w, lipgloss.Center, s)
+}
+
 func (s Style) FilterValue() string { return s.Name }
-func (s Style) Title() string       { return s.Name }
-func (s Style) Description() string { return "" }
+
+func (s Style) getCheckboxes() map[string]string {
+	outStr := make(map[string]string)
+	if s.Bold {
+		outStr["Bold"] = "✓ Bold"
+	} else {
+		outStr["Bold"] = "  Bold"
+	}
+
+	if s.Under {
+		outStr["Under"] = "✓ Under"
+	} else {
+		outStr["Under"] = "  Under"
+	}
+
+	if s.Blink {
+		outStr["Blink"] = "✓ Blink"
+	} else {
+		outStr["Blink"] = "  Blink"
+	}
+
+	return outStr
+}
+
+func (s Style) getPreview(msg string) string {
+	var backColor lipgloss.Color
+	if s.Back == -1 {
+		backColor = lipgloss.Color("")
+	} else {
+		backColor = lipgloss.Color(strconv.Itoa(s.Back))
+	}
+	previewColor := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(strconv.Itoa(s.Fore))).
+		Background(backColor).
+		Bold(s.Bold).Underline(s.Under).Blink(s.Blink)
+
+	return previewColor.Render(msg)
+}
 
 func NewStyle(themeName, styleName string) Style {
 	return Style{
