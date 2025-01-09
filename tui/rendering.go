@@ -12,12 +12,12 @@ import (
 )
 
 const Title = "stylish"
-const Subtitle = "~ Feel beautiful in your shell ~"
+const Subtitle = "~ Feel good in your shell ~"
 
 const ConstWidth = 34
 const ConstHeight = 27
 
-var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Width(ConstWidth).Height(ConstHeight) //.Width(50).Height(20).Align(lipgloss.Center, lipgloss.Center)
+var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")) //.Width(ConstWidth).Height(ConstHeight)
 
 var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true).Italic(true)
 var SubtitleStyle = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("#888888"))
@@ -49,7 +49,7 @@ func GetTermSize() (int, int) {
 }
 
 func CenterHorz(msg string) string {
-	return lipgloss.PlaceHorizontal(ConstWidth+1, lipgloss.Center, msg)
+	return lipgloss.PlaceHorizontal(ConstWidth, lipgloss.Center, msg)
 
 }
 
@@ -58,7 +58,7 @@ func Center(msg string) string {
 }
 
 func ProgramHeader() string {
-	return CenterHorz(fmt.Sprintf("%v\n%v", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
+	return lipgloss.PlaceHorizontal(ConstWidth+2, lipgloss.Center, fmt.Sprintf("%v\n%v", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
 }
 
 func RenderModel(body, footer string) string {

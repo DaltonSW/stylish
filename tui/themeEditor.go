@@ -35,6 +35,7 @@ func NewThemeModel(theme Theme) ThemeModel {
 	list := list.New(styles, del, ConstWidth, ConstHeight)
 	list.Title = "Manage Styles for " + theme.Name
 	list.SetStatusBarItemName("style", "styles")
+	list.SetShowStatusBar(false)
 	list.SetShowHelp(false)
 	list.SetShowTitle(false)
 
