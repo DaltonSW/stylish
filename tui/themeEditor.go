@@ -1,11 +1,16 @@
 package tui
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
 
@@ -13,7 +18,16 @@ type ThemeModel struct {
 	Theme     Theme
 	StyleList list.Model
 
-	NameInput   textinput.Model
+	NameInput  textinput.Model
+	nameActive bool
+
+	ColorInput textinput.Model
+	foreActive bool
+	backActive bool
+
+	FilesInput  textarea.Model
+	filesActive bool
+
 	InputActive bool
 
 	keys themeKeymap
@@ -37,15 +51,26 @@ func NewThemeModel(theme Theme) ThemeModel {
 	list.SetShowHelp(false)
 	list.SetShowTitle(false)
 
-	input := textinput.New()
-	input.Placeholder = "New Style Name"
+	nameInput := textinput.New()
+	nameInput.Placeholder = "New Style Name"
+
+	colorInput := textinput.New()
+	colorInput.Placeholder = "FFFFFF"
+	colorInput.CharLimit = 6
+	colorInput.Prompt = "#"
+	colorInput.Validate = ValidHexCode
+
+	fileArea := textarea.New()
+	fileArea.Placeholder = ".mp3\n.ogg\n.wav\n.txt"
 
 	return ThemeModel{
-		Theme:     theme,
-		NameInput: input,
-		StyleList: list,
-		help:      newHelp,
-		keys:      newThemeKeymap(),
+		Theme:      theme,
+		ColorInput: colorInput,
+		NameInput:  nameInput,
+		FilesInput: fileArea,
+		StyleList:  list,
+		help:       newHelp,
+		keys:       newThemeKeymap(),
 	}
 
 }
@@ -55,63 +80,127 @@ func NewThemeModel(theme Theme) ThemeModel {
 // (3) Blink x | (t) Types: 18
 
 func (m ThemeModel) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(textinput.Blink, textarea.Blink)
 }
 
 func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "enter":
-			if m.InputActive {
-				if m.NameInput.Value() == "" {
-					break
-				}
-				m.NameInput.Blur()
-				return NewStyleEditModel(m.Theme, GetStyle(m.Theme.Name, m.NameInput.Value())), nil
-
-			} else {
-				return NewStyleEditModel(m.Theme, m.StyleList.SelectedItem().(Style)), nil
-			}
 		case "n":
 			if !m.InputActive {
 				m.InputActive = true
 				return m, m.NameInput.Focus()
 			}
 		case "1":
-			m.StyleList.SelectedItem().(*Style).ToggleBold()
+			if !m.isAnythingActive() {
+				m.StyleList.SelectedItem().(*Style).ToggleBold()
+			}
 		case "2":
-			m.StyleList.SelectedItem().(*Style).ToggleUnder()
+			if !m.isAnythingActive() {
+				m.StyleList.SelectedItem().(*Style).ToggleUnder()
+			}
 		case "3":
-			m.StyleList.SelectedItem().(*Style).ToggleBlink()
+			if !m.isAnythingActive() {
+				m.StyleList.SelectedItem().(*Style).ToggleBlink()
+			}
 		case "f":
-			// TODO: Foreground editing
+			if !m.isAnythingActive() {
+				m.foreActive = true
+				return m, m.ColorInput.Focus()
+			}
 		case "b":
-			// TODO: Background editing
+			if !m.isAnythingActive() {
+				m.backActive = true
+				return m, m.ColorInput.Focus()
+			}
 		case "t":
-			// TODO: Filetype editing
-		case "esc", "q":
-			m.Theme.GenerateDirColors()
-			return NewLandingModel(), nil
+			if !m.isAnythingActive() {
+				m.filesActive = true
+				return m, m.FilesInput.Focus()
+			}
+		case "esc":
+			if !m.isAnythingActive() {
+				m.Theme.GenerateDirColors()
+				return NewLandingModel(), nil
+			} else {
+				m.deactivateInputs()
+				return m, nil
+			}
+		case "ctrl+s":
+			if m.isAnythingActive() {
+				if m.backActive {
+					m.StyleList.SelectedItem().(*Style).SetBack(m.ColorInput.Value())
+				} else if m.foreActive {
+					m.StyleList.SelectedItem().(*Style).SetFore(m.ColorInput.Value())
+				} else if m.filesActive {
+					m.StyleList.SelectedItem().(*Style).SetFiles(m.FilesInput.Value())
+				}
+			}
 		}
 	}
 	var cmd tea.Cmd
-	if m.InputActive {
+	if m.isAnythingActive() {
 		m.NameInput, cmd = m.NameInput.Update(msg)
+		m.FilesInput, cmd = m.FilesInput.Update(msg)
+		m.ColorInput, cmd = m.ColorInput.Update(msg)
 	} else {
-
 		m.StyleList, cmd = m.StyleList.Update(msg)
 	}
 	return m, cmd
 }
 
 func (m ThemeModel) View() string {
-	if m.InputActive {
-		return RenderModel(m.NameInput.View(), "")
-	} else {
+	if !m.isAnythingActive() {
 		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.Theme.Name))
 		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(m.keys))
 	}
+
+	if m.foreActive {
+		footerString := ""
+		if m.ColorInput.Err != nil {
+			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF1155")).Render(m.ColorInput.Err.Error())
+		} else {
+			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.ColorInput.Value())).Render(strings.Repeat("█", 18))
+		}
+
+		outStr := fmt.Sprintf("%v\n%v",
+			CenterHorz(TitleStyle.Render("Foreground Color")),
+			CenterHorz(m.ColorInput.View()))
+
+		return RenderModel(outStr, footerString)
+	} else if m.backActive {
+		footerString := ""
+		if m.ColorInput.Err != nil {
+			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF1155")).Render(m.ColorInput.Err.Error())
+		} else {
+			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.ColorInput.Value())).Render(strings.Repeat("█", 18))
+		}
+
+		outStr := fmt.Sprintf("%v\n%v",
+			CenterHorz(TitleStyle.Render("Background Color")),
+			CenterHorz(m.ColorInput.View()))
+		return RenderModel(outStr, footerString)
+	} else if m.filesActive {
+		return RenderModel(fmt.Sprintf("%v\n%v", "Filetypes", m.FilesInput.View()), "")
+	}
+
+	return ""
+}
+
+func (m ThemeModel) isAnythingActive() bool {
+	return m.backActive || m.foreActive || m.filesActive || m.nameActive
+}
+
+func (m *ThemeModel) deactivateInputs() {
+	m.backActive = false
+	m.foreActive = false
+	m.nameActive = false
+	m.filesActive = false
+
+	m.ColorInput.Blur()
+	m.FilesInput.Blur()
+	m.NameInput.Blur()
 }
 
 type themeKeymap struct {

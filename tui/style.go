@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -21,8 +20,8 @@ type Style struct {
 	Under bool `yaml:"under"`
 	Blink bool `yaml:"blink"`
 
-	Fore int `yaml:"fore"`
-	Back int `yaml:"back"`
+	Fore string `yaml:"fore"`
+	Back string `yaml:"back"`
 
 	FileTypes []string `yaml:"filetypes"`
 }
@@ -31,10 +30,6 @@ type Style struct {
 func (s Style) Title() string {
 	return lipgloss.PlaceHorizontal(lipgloss.Width(s.Description()), lipgloss.Center, s.getPreview(s.Name))
 }
-
-// (1) Bold  x | (f) Fore: #FFFFFF
-// (2) Under x | (b) Back: #000000
-// (3) Blink x | (t) Types: 18
 
 // 3 Row description
 func (s Style) Description() string {
@@ -98,14 +93,19 @@ func (s Style) getCheckboxes() map[string]string {
 
 func (s Style) getPreview(msg string) string {
 	var backColor lipgloss.Color
-	if s.Back == -1 {
+	var foreColor lipgloss.Color
+	if s.Back == "" {
 		backColor = lipgloss.Color("")
 	} else {
-		backColor = lipgloss.Color(strconv.Itoa(s.Back))
+		backColor = lipgloss.Color(s.Back)
 	}
-	previewColor := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(strconv.Itoa(s.Fore))).
-		Background(backColor).
+	if s.Fore == "" {
+		foreColor = lipgloss.Color("")
+	} else {
+		foreColor = lipgloss.Color(s.Fore)
+	}
+
+	previewColor := lipgloss.NewStyle().Foreground(foreColor).Background(backColor).
 		Bold(s.Bold).Underline(s.Under).Blink(s.Blink)
 
 	return previewColor.Render(msg)
@@ -123,12 +123,22 @@ func (s *Style) ToggleBlink() {
 	s.Blink = !s.Blink
 }
 
+func (s *Style) SetFore(fore string) {
+	s.Fore = fore
+}
+
+func (s *Style) SetBack(back string) {
+	s.Back = back
+}
+
+func (s *Style) SetFiles(files string) {
+	s.FileTypes = strings.Split(files, "\n")
+}
+
 func NewStyle(themeName, styleName string) Style {
 	return Style{
 		Theme:     themeName,
 		Name:      styleName,
-		Fore:      -1,
-		Back:      -1,
 		FileTypes: make([]string, 0),
 	}
 }
@@ -195,12 +205,14 @@ func (s Style) GetDirColorBlock() string {
 		styleStr += "5;"
 	}
 
-	if s.Fore != -1 {
-		styleStr += fmt.Sprintf("38;5;%v;", strconv.Itoa(s.Fore))
+	if s.Fore != "" {
+		fore := HexToRGBA(s.Fore)
+		styleStr += fmt.Sprintf(TrueColorFore, fore.R, fore.G, fore.B)
 	}
 
-	if s.Back != -1 {
-		styleStr += fmt.Sprintf("48;5;%v;", strconv.Itoa(s.Back))
+	if s.Back != "" {
+		back := HexToRGBA(s.Back)
+		styleStr += fmt.Sprintf(TrueColorFore, back.R, back.G, back.B)
 	}
 
 	styleStr = strings.TrimSuffix(styleStr, ";")
