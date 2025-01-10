@@ -14,7 +14,7 @@ import (
 const Title = "stylish"
 const Subtitle = "~ Feel good in your shell ~"
 
-const ConstWidth = 34
+const ConstWidth = 35
 const ConstHeight = 27
 
 var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")) //.Width(ConstWidth).Height(ConstHeight)

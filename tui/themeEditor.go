@@ -50,6 +50,10 @@ func NewThemeModel(theme Theme) ThemeModel {
 
 }
 
+// (1) Bold  x | (f) Fore: #FFFFFF
+// (2) Under x | (b) Back: #000000
+// (3) Blink x | (t) Types: 18
+
 func (m ThemeModel) Init() tea.Cmd {
 	return textinput.Blink
 }
@@ -80,6 +84,12 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.StyleList.SelectedItem().(*Style).ToggleUnder()
 		case "3":
 			m.StyleList.SelectedItem().(*Style).ToggleBlink()
+		case "f":
+			// TODO: Foreground editing
+		case "b":
+			// TODO: Background editing
+		case "t":
+			// TODO: Filetype editing
 		case "esc", "q":
 			m.Theme.GenerateDirColors()
 			return NewLandingModel(), nil
