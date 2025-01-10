@@ -29,7 +29,7 @@ const TrueColorBack = "48;2;%d;%d;%d"
 const EightBitFore = "38;5;%d"
 const EightBitBack = "48;5;%d"
 
-var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")) //.Width(ConstWidth).Height(ConstHeight)
+var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Height(ConstHeight)
 
 var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true).Italic(true)
 var SubtitleStyle = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("#888888"))
