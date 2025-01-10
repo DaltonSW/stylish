@@ -30,7 +30,6 @@ type ThemeModel struct {
 
 	InputActive bool
 
-	keys themeKeymap
 	help help.Model
 }
 
@@ -55,13 +54,13 @@ func NewThemeModel(theme Theme) ThemeModel {
 	nameInput.Placeholder = "New Style Name"
 
 	colorInput := textinput.New()
-	colorInput.Placeholder = "FFFFFF"
 	colorInput.CharLimit = 6
 	colorInput.Prompt = "#"
 	colorInput.Validate = ValidHexCode
 
 	fileArea := textarea.New()
 	fileArea.Placeholder = ".mp3\n.ogg\n.wav\n.txt"
+	fileArea.SetWidth(ConstWidth - 2)
 
 	return ThemeModel{
 		Theme:      theme,
@@ -70,7 +69,6 @@ func NewThemeModel(theme Theme) ThemeModel {
 		FilesInput: fileArea,
 		StyleList:  list,
 		help:       newHelp,
-		keys:       newThemeKeymap(),
 	}
 
 }
@@ -123,9 +121,6 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !m.isAnythingActive() {
 				m.Theme.GenerateDirColors()
 				return NewLandingModel(), nil
-			} else {
-				m.deactivateInputs()
-				return m, nil
 			}
 		case "ctrl+s":
 			if m.isAnythingActive() {
@@ -136,6 +131,16 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else if m.filesActive {
 					m.StyleList.SelectedItem().(*Style).SetFiles(m.FilesInput.Value())
 				}
+			}
+			m.deactivateInputs()
+			return m, nil
+		case "ctrl+c":
+			if m.isAnythingActive() {
+				m.deactivateInputs()
+				return m, nil
+			} else {
+				m.Theme.GenerateDirColors()
+				return NewLandingModel(), nil
 			}
 		}
 	}
@@ -153,39 +158,42 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ThemeModel) View() string {
 	if !m.isAnythingActive() {
 		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.Theme.Name))
-		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(m.keys))
+		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(themeKeys))
 	}
 
-	if m.foreActive {
-		footerString := ""
-		if m.ColorInput.Err != nil {
-			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF1155")).Render(m.ColorInput.Err.Error())
-		} else {
-			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.ColorInput.Value())).Render(strings.Repeat("█", 18))
-		}
-
-		outStr := fmt.Sprintf("%v\n%v",
-			CenterHorz(TitleStyle.Render("Foreground Color")),
-			CenterHorz(m.ColorInput.View()))
-
-		return RenderModel(outStr, footerString)
-	} else if m.backActive {
-		footerString := ""
-		if m.ColorInput.Err != nil {
-			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF1155")).Render(m.ColorInput.Err.Error())
-		} else {
-			footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.ColorInput.Value())).Render(strings.Repeat("█", 18))
-		}
-
-		outStr := fmt.Sprintf("%v\n%v",
-			CenterHorz(TitleStyle.Render("Background Color")),
-			CenterHorz(m.ColorInput.View()))
-		return RenderModel(outStr, footerString)
+	if m.foreActive || m.backActive {
+		return m.getColorModel()
 	} else if m.filesActive {
-		return RenderModel(fmt.Sprintf("%v\n%v", "Filetypes", m.FilesInput.View()), "")
+		return RenderModel(fmt.Sprintf("%v\n\n%v",
+			CenterHorz(TitleStyle.Render("Filetypes")), CenterHorz(m.FilesInput.View())), m.getEditHelpText())
 	}
 
 	return ""
+}
+
+func (m ThemeModel) getColorModel() string {
+	var titleStr string
+	if m.foreActive {
+		titleStr = TitleStyle.Render("Foreground Color")
+	} else {
+		titleStr = TitleStyle.Render("Background Color")
+	}
+
+	footerString := ""
+	if m.ColorInput.Err != nil {
+		footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF1155")).Render(m.ColorInput.Err.Error())
+	} else {
+		footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.ColorInput.Value())).Render(strings.Repeat("█", 18))
+	}
+	m.help.ShowAll = true
+
+	outStr := fmt.Sprintf("%v\n\n%v\n\n%v\n\n%v",
+		CenterHorz(titleStr),
+		CenterHorz(m.ColorInput.View()),
+		CenterHorz(footerString),
+		m.getEditHelpText())
+
+	return RenderModel(outStr, "")
 }
 
 func (m ThemeModel) isAnythingActive() bool {
@@ -226,35 +234,41 @@ func (k themeKeymap) FullHelp() [][]key.Binding {
 	}
 }
 
-func newThemeKeymap() themeKeymap {
-	return themeKeymap{
-		Up: key.NewBinding(
-			key.WithKeys("k", "up"),
-			key.WithHelp("k/↑", "Up"),
-		),
-		Down: key.NewBinding(
-			key.WithKeys("j", "down"),
-			key.WithHelp("j/↓", "Down"),
-		),
-		Select: key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "Select"),
-		),
-		Quit: key.NewBinding(
-			key.WithKeys("q", "esc", "ctrl+c"),
-			key.WithHelp("ctrl+c", "Quit"),
-		),
-		Delete: key.NewBinding(
-			key.WithKeys("d", "x"),
-			key.WithHelp("d", "Delete Style"),
-		),
-		Create: key.NewBinding(
-			key.WithKeys("n"),
-			key.WithHelp("n", "New Style"),
-		),
-		Filter: key.NewBinding(
-			key.WithKeys("/"),
-			key.WithHelp("/", "Filter"),
-		),
-	}
+var themeKeys = themeKeymap{
+	Up: key.NewBinding(
+		key.WithKeys("k", "up"),
+		key.WithHelp("k/↑", "Up"),
+	),
+	Down: key.NewBinding(
+		key.WithKeys("j", "down"),
+		key.WithHelp("j/↓", "Down"),
+	),
+	Select: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "Select"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("q", "esc", "ctrl+c"),
+		key.WithHelp("ctrl+c", "Quit"),
+	),
+	Delete: key.NewBinding(
+		key.WithKeys("d", "x"),
+		key.WithHelp("d", "Delete Style"),
+	),
+	Create: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "New Style"),
+	),
+	Filter: key.NewBinding(
+		key.WithKeys("/"),
+		key.WithHelp("/", "Filter"),
+	),
+}
+
+func (m ThemeModel) getEditHelpText() string {
+	keyStyle := m.help.Styles.FullKey
+	descStyle := m.help.Styles.FullDesc
+	return fmt.Sprintf("%v\n%v",
+		CenterHorz(keyStyle.Render("ctrl+s")+descStyle.Render(" [Save]   ")),
+		CenterHorz(keyStyle.Render("ctrl+c")+descStyle.Render(" [Discard]")))
 }
