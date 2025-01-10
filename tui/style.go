@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
+	"github.com/muesli/termenv"
 )
 
 type Style struct {
@@ -142,7 +143,11 @@ func (s *Style) SetBack(back string) {
 }
 
 func (s *Style) SetFiles(files string) {
-	s.FileTypes = strings.Split(files, "\n")
+	if files == "" {
+		s.FileTypes = make([]string, 0)
+	} else {
+		s.FileTypes = strings.Split(files, "\n")
+	}
 }
 
 func NewStyle(themeName, styleName string) Style {
@@ -199,6 +204,10 @@ func (s Style) SaveStyle() {
 }
 
 func (s Style) GetDirColorBlock() string {
+	if len(s.FileTypes) < 1 {
+		return ""
+	}
+
 	outStr := " # " + s.Name + "\n\n"
 
 	styleStr := ""
@@ -216,13 +225,23 @@ func (s Style) GetDirColorBlock() string {
 	}
 
 	if s.Fore != "" {
-		fore := HexToRGBA(s.Fore)
-		styleStr += fmt.Sprintf(TrueColorFore, fore.R, fore.G, fore.B)
+		var fore termenv.Color
+		if EightBitMode {
+			fore = HexToEightBit(s.Fore)
+		} else {
+			fore = HexToRGB(s.Fore)
+		}
+		styleStr += fore.Sequence(false) + ";"
 	}
 
 	if s.Back != "" {
-		back := HexToRGBA(s.Back)
-		styleStr += fmt.Sprintf(TrueColorFore, back.R, back.G, back.B)
+		var back termenv.Color
+		if EightBitMode {
+			back = HexToEightBit(s.Back)
+		} else {
+			back = HexToRGB(s.Back)
+		}
+		styleStr += back.Sequence(true) + ";"
 	}
 
 	styleStr = strings.TrimSuffix(styleStr, ";")
@@ -231,5 +250,5 @@ func (s Style) GetDirColorBlock() string {
 		outStr += fmt.Sprintf("%v %v\n", file, styleStr)
 	}
 
-	return outStr
+	return outStr + "\n"
 }
