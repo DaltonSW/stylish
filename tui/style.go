@@ -32,7 +32,17 @@ func (s Style) Title() string {
 	return lipgloss.PlaceHorizontal(lipgloss.Width(s.Description()), lipgloss.Center, s.getPreview(s.Name))
 }
 
+// (1) Bold  x | (f) Fore: #FFFFFF
+// (2) Under x | (b) Back: #000000
+// (3) Blink x | (t) Types: 18
+
+// 3 Row description
 func (s Style) Description() string {
+	// return s.threeRowDesc()
+	return s.twoColDesc()
+}
+
+func (s Style) threeRowDesc() string {
 	boxes := s.getCheckboxes()
 	topLine := fmt.Sprintf("%v | %v | %v", boxes["Bold"], boxes["Under"], boxes["Blink"])
 	// midLine := fmt.Sprintf("Fore: #%v | Back: #%v", s.Fore, s.Back)
@@ -41,6 +51,18 @@ func (s Style) Description() string {
 	// return fmt.Sprintf(outStr, checkboxes["Bold"], checkboxes["Under"], checkboxes["Blink"], s.Fore, s.Back, s.getPreview("preview.txt"))
 	w := lipgloss.Width(midLine)
 	outStr := fmt.Sprintf("%v\n%v\n%v\n", center(topLine, w), center(midLine, w), center(botLine, w))
+	// return lipgloss.PlaceHorizontal(lipgloss.Width(midLine), lipgloss.Center, outStr)
+	return outStr
+}
+
+func (s Style) twoColDesc() string {
+	boxes := s.getCheckboxes()
+	// topLine := fmt.Sprintf("(1) %v | (f) Fore: #%v ", boxes["Bold"], s.Fore)
+	topLine := fmt.Sprintf("(1) %v | (f) Fore: #FFFFFF ", boxes["Bold"])
+	midLine := fmt.Sprintf("(2) %v | (b) Back: #123456 ", boxes["Under"])
+	// midLine := fmt.Sprintf("(2) %v | (b) Back: #%v ", boxes["Under"], s.Back)
+	botLine := fmt.Sprintf("(3) %v | (t) Filetypes: %v", boxes["Blink"], len(s.FileTypes))
+	outStr := fmt.Sprintf("%v\n%v\n%v\n", topLine, midLine, botLine)
 	// return lipgloss.PlaceHorizontal(lipgloss.Width(midLine), lipgloss.Center, outStr)
 	return outStr
 }
@@ -54,9 +76,9 @@ func (s Style) FilterValue() string { return s.Name }
 func (s Style) getCheckboxes() map[string]string {
 	outStr := make(map[string]string)
 	if s.Bold {
-		outStr["Bold"] = "✓ Bold"
+		outStr["Bold"] = "✓ Bold "
 	} else {
-		outStr["Bold"] = "  Bold"
+		outStr["Bold"] = "  Bold "
 	}
 
 	if s.Under {
