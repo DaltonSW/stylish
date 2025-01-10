@@ -45,7 +45,6 @@ func NewThemeModel(theme Theme) ThemeModel {
 	del := GetItemDelgate()
 	list := list.New(styles, del, ConstWidth, ConstHeight)
 	list.Title = "Manage Styles for " + theme.Name
-	list.SetStatusBarItemName("style", "styles")
 	list.SetShowStatusBar(false)
 	list.SetShowHelp(false)
 	list.SetShowTitle(false)
@@ -82,6 +81,7 @@ func (m ThemeModel) Init() tea.Cmd {
 }
 
 func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	style := m.StyleList.SelectedItem().(*Style)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -92,15 +92,18 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "1":
 			if !m.isAnythingActive() {
-				m.StyleList.SelectedItem().(*Style).ToggleBold()
+				style.ToggleBold()
+				style.SaveStyle()
 			}
 		case "2":
 			if !m.isAnythingActive() {
-				m.StyleList.SelectedItem().(*Style).ToggleUnder()
+				style.ToggleUnder()
+				style.SaveStyle()
 			}
 		case "3":
 			if !m.isAnythingActive() {
 				m.StyleList.SelectedItem().(*Style).ToggleBlink()
+				style.SaveStyle()
 			}
 		case "f":
 			if !m.isAnythingActive() {
@@ -125,15 +128,17 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s":
 			if m.isAnythingActive() {
 				if m.backActive {
-					m.StyleList.SelectedItem().(*Style).SetBack(m.ColorInput.Value())
+					style.SetBack(m.ColorInput.Value())
 				} else if m.foreActive {
-					m.StyleList.SelectedItem().(*Style).SetFore(m.ColorInput.Value())
+					style.SetFore(m.ColorInput.Value())
 				} else if m.filesActive {
-					m.StyleList.SelectedItem().(*Style).SetFiles(m.FilesInput.Value())
+					style.SetFiles(m.FilesInput.Value())
 				}
+				style.SaveStyle()
+				m.deactivateInputs()
+
+				return m, nil
 			}
-			m.deactivateInputs()
-			return m, nil
 		case "ctrl+c":
 			if m.isAnythingActive() {
 				m.deactivateInputs()
@@ -142,6 +147,17 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Theme.GenerateDirColors()
 				return NewLandingModel(), nil
 			}
+		case "ctrl+q":
+			if m.foreActive {
+				style.SetFore("")
+			} else if m.backActive {
+				style.SetBack("")
+			} else if m.filesActive {
+				style.SetFiles("")
+			}
+			m.deactivateInputs()
+			style.SaveStyle()
+			return m, nil
 		}
 	}
 	var cmd tea.Cmd
@@ -268,7 +284,8 @@ var themeKeys = themeKeymap{
 func (m ThemeModel) getEditHelpText() string {
 	keyStyle := m.help.Styles.FullKey
 	descStyle := m.help.Styles.FullDesc
-	return fmt.Sprintf("%v\n%v",
+	return fmt.Sprintf("%v\n%v\n%v",
 		CenterHorz(keyStyle.Render("ctrl+s")+descStyle.Render(" [Save]   ")),
-		CenterHorz(keyStyle.Render("ctrl+c")+descStyle.Render(" [Discard]")))
+		CenterHorz(keyStyle.Render("ctrl+c")+descStyle.Render(" [Discard]")),
+		CenterHorz(keyStyle.Render("ctrl+q")+descStyle.Render(" [Clear]  ")))
 }

@@ -52,10 +52,20 @@ func (s Style) threeRowDesc() string {
 
 func (s Style) twoColDesc() string {
 	boxes := s.getCheckboxes()
-	// topLine := fmt.Sprintf("(1) %v | (f) Fore: #%v ", boxes["Bold"], s.Fore)
-	topLine := fmt.Sprintf("(1) %v | (f) Fore: #FFFFFF ", boxes["Bold"])
-	midLine := fmt.Sprintf("(2) %v | (b) Back: #123456 ", boxes["Under"])
-	// midLine := fmt.Sprintf("(2) %v | (b) Back: #%v ", boxes["Under"], s.Back)
+	var fore string
+	var back string
+	if s.Fore == "" {
+		fore = "DEFAULT"
+	} else {
+		fore = "#" + s.Fore
+	}
+	if s.Back == "" {
+		back = "DEFAULT"
+	} else {
+		back = "#" + s.Back
+	}
+	topLine := fmt.Sprintf("(1) %v | (f) Fore: %v ", boxes["Bold"], fore)
+	midLine := fmt.Sprintf("(2) %v | (b) Back: %v ", boxes["Under"], back)
 	botLine := fmt.Sprintf("(3) %v | (t) Filetypes: %v", boxes["Blink"], len(s.FileTypes))
 	outStr := fmt.Sprintf("%v\n%v\n%v\n", topLine, midLine, botLine)
 	// return lipgloss.PlaceHorizontal(lipgloss.Width(midLine), lipgloss.Center, outStr)
@@ -97,12 +107,12 @@ func (s Style) getPreview(msg string) string {
 	if s.Back == "" {
 		backColor = lipgloss.Color("")
 	} else {
-		backColor = lipgloss.Color(s.Back)
+		backColor = lipgloss.Color("#" + s.Back)
 	}
 	if s.Fore == "" {
 		foreColor = lipgloss.Color("")
 	} else {
-		foreColor = lipgloss.Color(s.Fore)
+		foreColor = lipgloss.Color("#" + s.Fore)
 	}
 
 	previewColor := lipgloss.NewStyle().Foreground(foreColor).Background(backColor).
