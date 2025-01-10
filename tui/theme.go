@@ -112,12 +112,18 @@ func (t Theme) LoadStyles() []Style {
 	return outStyles
 }
 
-func (t *Theme) ReplaceStyle(style Style) {
-	for i, s := range t.Styles {
-		if s.Name == style.Name {
-			t.Styles[i] = style
+// RemoveStyle will remove the style with a given name from both the theme's list and from the file system
+func (t *Theme) RemoveStyle(styleName string) {
+	newStyles := make([]Style, 0)
+	for _, s := range t.Styles {
+		if s.Name != styleName {
+			newStyles = append(newStyles, s)
 		}
 	}
+	t.Styles = newStyles
+
+	path := filepath.Join(ThemeConfigFolder, t.Name, styleName+".yaml")
+	os.Remove(path)
 }
 
 // GenerateDirColors will convert all of a theme's styles into an output file
