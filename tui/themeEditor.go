@@ -289,3 +289,29 @@ func (m ThemeModel) getEditHelpText() string {
 		CenterHorz(keyStyle.Render("ctrl+c")+descStyle.Render(" [Discard]")),
 		CenterHorz(keyStyle.Render("ctrl+q")+descStyle.Render(" [Clear]  ")))
 }
+
+func (m ThemeModel) getInitStrings() string {
+	keyStyle := m.help.Styles.FullKey
+	descStyle := m.help.Styles.FullDesc
+	outStr := CenterHorz(TitleStyle.Render("System File Types")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("FILE")+descStyle.Render(" Normal File")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("DIR")+descStyle.Render(" Normal Directory")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("LINK")+descStyle.Render(" Symbolic Link")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("MULTIHARDLINK")+descStyle.Render(" File w/ >1 Link")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("FIFO")+descStyle.Render(" Pipe")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("SOCK")+descStyle.Render(" Socket")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("DOOR")+descStyle.Render(" Door")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("BLK")+descStyle.Render(" Block Device Driver       ")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("CHR")+descStyle.Render(" Char. Device Driver       ")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("ORPHAN")+descStyle.Render(" Sym Link to Non-Existent File")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("MISSING")+descStyle.Render(" Missing Files")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("SETUID")+descStyle.Render(" File w/ u+s")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("SETGID")+descStyle.Render(" File w/ g+s")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("CAPABILITY")+descStyle.Render(" File w/ capability")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("STICKY_OTHER_WRITABLE")+descStyle.Render(" Dir w/ +t,o+w")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("OTHER_WRITABLE")+descStyle.Render(" Dir w/ o+w, no t")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("STICKY")+descStyle.Render(" Dir w/ +t, no o or w")) + "\n"
+	outStr += CenterHorz(keyStyle.Render("EXEC")+descStyle.Render(" Execute permissions")) + "\n"
+
+	return outStr
+}
