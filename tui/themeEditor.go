@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 )
@@ -13,7 +12,6 @@ import (
 type ThemeModel struct {
 	Theme     Theme
 	StyleList list.Model
-	Viewport  viewport.Model
 
 	NameInput   textinput.Model
 	InputActive bool
@@ -29,7 +27,7 @@ func NewThemeModel(theme Theme) ThemeModel {
 	var styles []list.Item
 	for _, style := range theme.Styles {
 		log.Debug(style)
-		styles = append(styles, list.Item(style))
+		styles = append(styles, list.Item(&style))
 	}
 	del := GetItemDelgate()
 	list := list.New(styles, del, ConstWidth, ConstHeight)
@@ -76,7 +74,14 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.InputActive = true
 				return m, m.NameInput.Focus()
 			}
+		case "1":
+			m.StyleList.SelectedItem().(*Style).ToggleBold()
+		case "2":
+			m.StyleList.SelectedItem().(*Style).ToggleUnder()
+		case "3":
+			m.StyleList.SelectedItem().(*Style).ToggleBlink()
 		case "esc", "q":
+			m.Theme.GenerateDirColors()
 			return NewLandingModel(), nil
 		}
 	}

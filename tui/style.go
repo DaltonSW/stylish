@@ -89,6 +89,18 @@ func (s Style) getPreview(msg string) string {
 	return previewColor.Render(msg)
 }
 
+func (s *Style) ToggleBold() {
+	s.Bold = !s.Bold
+}
+
+func (s *Style) ToggleUnder() {
+	s.Under = !s.Under
+}
+
+func (s *Style) ToggleBlink() {
+	s.Blink = !s.Blink
+}
+
 func NewStyle(themeName, styleName string) Style {
 	return Style{
 		Theme:     themeName,
