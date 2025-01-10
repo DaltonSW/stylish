@@ -3,15 +3,17 @@ package tui
 import (
 	"errors"
 	"fmt"
-	"image/color"
+	// "image/color"
 	"log"
 	"os"
 	"regexp"
-	"strconv"
+	// "strconv"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 	"golang.org/x/term"
 )
 
@@ -28,6 +30,10 @@ const TrueColorBack = "48;2;%d;%d;%d"
 
 const EightBitFore = "38;5;%d"
 const EightBitBack = "48;5;%d"
+
+var EightBitMode = false
+var DefaultTermFore lipgloss.Color
+var DefaultTermBack lipgloss.Color
 
 var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#4400FF")).Height(ConstHeight)
 
@@ -90,13 +96,16 @@ func ValidHexCode(input string) error {
 
 }
 
-func HexToRGBA(hex string) color.RGBA {
-	values, _ := strconv.ParseUint(string(hex), 16, 32)
-	return color.RGBA{R: uint8(values >> 16), G: uint8((values >> 8) & 0xFF), B: uint8(values & 0xFF), A: 255}
+func HexToRGB(hex string) termenv.RGBColor {
+	if strings.HasPrefix(hex, "#") {
+		return termenv.RGBColor(hex)
+	} else {
+		return termenv.RGBColor("#" + hex)
+	}
+
 }
 
-func HexToEightBit(hex string) uint8 {
-	color := HexToRGBA(hex)
-
-	return (color.R*7/255)<<5 + (color.G*7/255)<<2 + (color.B * 3 / 255)
+func HexToEightBit(hex string) termenv.Color {
+	prof256 := termenv.ANSI256
+	return prof256.Convert(HexToRGB(hex))
 }

@@ -54,22 +54,30 @@ func handleArgs() {
 		}
 
 	case "apply":
-		if len(os.Args) < 3 {
-			log.Fatal("No theme provided")
-		}
-		theme := os.Args[2]
-		// log.Printf("Apply command for " + theme)
-		cmd := exec.Command("dircolors", filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
-		cmdOut, cmdErr := cmd.Output()
-		if cmdErr != nil {
-			log.Fatal(cmdErr.Error() + string(cmdOut))
-		}
-		// cmdStr := string(cmdOut)
-		// outStr := strings.TrimPrefix(strings.TrimSuffix(cmdStr, ";\nexport LS_COLORS\n"), "LS_COLORS=")
-		fmt.Print(string(cmdOut))
+		doApply()
+	case "apply-8bit":
+		tui.EightBitMode = true
+		doApply()
 
 	default:
 		log.Fatal("Command not found")
 	}
 
+}
+
+func doApply() {
+
+	var theme string
+	if len(os.Args) < 3 {
+		theme = "default"
+	} else {
+		theme = os.Args[2]
+	}
+
+	cmd := exec.Command("dircolors", filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
+	cmdOut, cmdErr := cmd.Output()
+	if cmdErr != nil {
+		log.Fatal(cmdErr.Error() + string(cmdOut))
+	}
+	fmt.Print(string(cmdOut))
 }
