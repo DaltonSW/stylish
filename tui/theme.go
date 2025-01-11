@@ -126,6 +126,16 @@ func (t *Theme) RemoveStyle(styleName string) {
 	os.Remove(path)
 }
 
+func (t Theme) DoesStyleExist(styleName string) bool {
+
+	for _, s := range t.Styles {
+		if s.Name == styleName {
+			return true
+		}
+	}
+	return false
+}
+
 // GenerateDirColors will convert all of a theme's styles into an output file
 func (t Theme) GenerateDirColors() error {
 

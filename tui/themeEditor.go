@@ -135,7 +135,8 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc": // Close theme editor
 			if !m.isAnythingActive() {
 				m.Theme.GenerateDirColors()
-				return NewLandingModel(), nil
+				model := NewLandingModel()
+				return model, model.Init()
 			}
 		case "ctrl+h": // Show detailed system filetypes helptext
 			if m.filesActive {
@@ -144,7 +145,13 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s": // Save and close
 			if m.isAnythingActive() {
 				if m.nameActive {
-					newStyle := NewStyle(m.Theme.Name, m.NameInput.Value())
+					val := m.NameInput.Value()
+					if m.Theme.DoesStyleExist(val) {
+						m.deactivateInputs()
+						m.NameInput.SetValue("")
+						return m, nil
+					}
+					newStyle := NewStyle(m.Theme.Name, val)
 					m.Theme.Styles = append(m.Theme.Styles, newStyle)
 					m.StyleList.InsertItem(len(m.StyleList.Items()), &newStyle)
 					m.StyleList.CursorDown()
@@ -153,6 +160,7 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.deactivateInputs()
 					m.NameInput.SetValue("")
 					return m, cmd
+
 				}
 				if m.backActive {
 					style.SetBack(m.ColorInput.Value())
@@ -172,7 +180,8 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			} else {
 				m.Theme.GenerateDirColors()
-				return NewLandingModel(), nil
+				model := NewLandingModel()
+				return model, model.Init()
 			}
 		case "ctrl+q": // Clear value to default
 			if m.foreActive {

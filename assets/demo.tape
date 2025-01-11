@@ -57,7 +57,7 @@ Type "clear"
 Enter
 Type "stylish"
 Enter
-Sleep 1000ms
+Sleep 2000ms
 
 # Create new theme called "DemoTheme"
 Type "n"
