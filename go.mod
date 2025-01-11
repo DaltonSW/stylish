@@ -1,4 +1,4 @@
-module go.dalton.dog/colorgen
+module go.dalton.dog/stylish
 
 go 1.23.1
 
