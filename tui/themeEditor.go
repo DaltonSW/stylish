@@ -62,7 +62,7 @@ func NewThemeModel(theme Theme) ThemeModel {
 
 	fileArea := textarea.New()
 	fileArea.Placeholder = ".mp3\n.ogg\n.wav\n.txt"
-	fileArea.SetWidth(ConstWidth - 2)
+	fileArea.SetWidth(ConstWidth - 8)
 
 	return ThemeModel{
 		Theme:      theme,
@@ -88,12 +88,13 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "n": // New theme
+		case "n": // New style
 			if !m.isAnythingActive() {
+				m.NameInput.SetValue("")
 				m.nameActive = true
 				return m, m.NameInput.Focus()
 			}
-		case "d": // Delete theme
+		case "d": // Delete style
 			if !m.isAnythingActive() {
 				m.StyleList.RemoveItem(m.StyleList.Index())
 				m.Theme.RemoveStyle(style.Name)
@@ -115,16 +116,19 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "f": // Edit Foreground
 			if !m.isAnythingActive() {
+				m.ColorInput.SetValue(style.Fore)
 				m.foreActive = true
 				return m, m.ColorInput.Focus()
 			}
 		case "b": // Edit Background
 			if !m.isAnythingActive() {
+				m.ColorInput.SetValue(style.Back)
 				m.backActive = true
 				return m, m.ColorInput.Focus()
 			}
 		case "t": // Edit filetypes
 			if !m.isAnythingActive() {
+				m.FilesInput.SetValue(strings.Join(style.FileTypes, "\n"))
 				m.filesActive = true
 				return m, m.FilesInput.Focus()
 			}
@@ -146,6 +150,7 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					var cmd tea.Cmd
 					m.StyleList, cmd = m.StyleList.Update(msg)
 					m.deactivateInputs()
+					m.NameInput.SetValue("")
 					return m, cmd
 				}
 				if m.backActive {
