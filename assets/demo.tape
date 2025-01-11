@@ -1,30 +1,63 @@
 # `stylish` demo
 Output demo.gif
+Output demo.mp4
 
 # Settings
 
 Set Width 700 
-Set Height 1050
+Set Height 1100
 Set TypingSpeed 100ms
 
 # Require `stylish` and its dependency
 Require dircolors
 Require stylish
 
+# Hidden initialization
 Hide
+
+# Ensure program is up to date
 Type "go install .."
 Enter
 Sleep 100ms
-Type "rm ~/.config/stylish/DemoTheme -rf"
+
+# Remove demo theme if it already exists
+# Type "rm ~/.config/stylish/DemoTheme -rf"
+# Enter
+
+# Setup demo dir that has example files
+Type "mkdir DemoDir"
+Enter
+Type "cd DemoDir"
+Enter
+Type "touch Nickleback.mp3 MyCoolRingtone.wav SlamPoetryDemo.ogg"
+Enter
+Type "touch my_first_wedding.mp4 my_seventh_wedding.avi"
+Enter
+Type "touch config.conf poketerm.ini jason.json mark_hamill.yaml tommy_lee.toml"
+Enter
+Type "cd .."
+Enter
+
+# Clear any existing styling
+Type 'export LS_COLORS=""'
 Enter
 Type "clear"
 Enter
+
+# Get back to the action
 Show
 
+# Show boring files
+Type "ls DemoDir --color=auto"
+Enter
+Sleep 2000ms
+
 # Start program
+Type "clear"
+Enter
 Type "stylish"
 Enter
-Sleep 600ms
+Sleep 1000ms
 
 # Create new theme called "DemoTheme"
 Type "n"
@@ -36,7 +69,7 @@ Sleep 600ms
 
 # Create new style called "Audio Files"
 Type "n"
-Sleep 800ms
+Sleep 400ms
 Type "Audio Files"
 # Sleep 1000ms
 Ctrl+S
@@ -47,8 +80,10 @@ Type "1"
 Sleep 1000ms
 
 # Set foreground to #E69F66, leave background default
-Type "fE69F66"
-Sleep 1000ms
+Type "f"
+Sleep 250ms
+Type "E69F66"
+Sleep 800ms
 Ctrl+S
 Sleep 800ms
 
@@ -58,17 +93,16 @@ Enter
 Type ".ogg"
 Enter
 Type ".wav"
-Sleep 800ms
+Sleep 600ms
 Ctrl+S
-Sleep 800ms
+Sleep 600ms
 
 # Create new style called "Video Files"
 Type "n"
 Sleep 500ms
 Type "Video Files"
-Sleep 800ms
 Ctrl+S
-Type "j"
+# Type "j"
 Sleep 800ms
 
 # Make "Video Files" underlined
@@ -93,9 +127,8 @@ Sleep 800ms
 Type "n"
 Sleep 500ms
 Type "Config Files"
-Sleep 800ms
 Ctrl+S
-Type "j"
+# Type "j"
 Sleep 800ms
 
 # Make "Config Files" bold and underlined (vhs doesn't render blinking)
@@ -130,8 +163,22 @@ Ctrl+C
 Sleep 800ms
 Ctrl+C
 
-Sleep 200ms
-Type "stylish apply DemoTheme"
-Enter
+# Sleep 200ms
+# Type "stylish apply DemoTheme"
+# Enter
 
-Sleep 3000ms
+# Sleep 2000ms
+
+#Type "eval $(stylish apply DemoTheme)"
+#Enter
+#Type "ls DemoDir --color=auto"
+Type "cd DemoDir" Enter
+Type "stylish preview DemoTheme" Enter
+Sleep 4000ms
+
+# Execution cleanup
+Hide
+Type "rm -rf ~/.config/stylish/DemoTheme"
+Enter
+Type "rm -rf ./DemoDir"
+Enter

@@ -147,6 +147,7 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					newStyle := NewStyle(m.Theme.Name, m.NameInput.Value())
 					m.Theme.Styles = append(m.Theme.Styles, newStyle)
 					m.StyleList.InsertItem(len(m.StyleList.Items()), &newStyle)
+					m.StyleList.CursorDown()
 					var cmd tea.Cmd
 					m.StyleList, cmd = m.StyleList.Update(msg)
 					m.deactivateInputs()

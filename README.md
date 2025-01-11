@@ -11,6 +11,8 @@ This affects programs like `ls`, `tree`, `fd`, and any other tools that opt to r
 - NO blindly working without an actual preview!
 - NO need to hunt down scattered, poor documentation and references!
 
+![Demo of stylish](./assets/demo.gif)
+
 ## Installation
 
 ### Github Releases

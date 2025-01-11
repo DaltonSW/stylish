@@ -1,19 +1,27 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"go.dalton.dog/stylish/tui"
 )
 
-func main() {
-	// log.SetLevel(log.DebugLevel)
+// TODO: Swap to cobra for commands
+// TODO: Move stuff into `cmd` and `internal` to publish on pkg.go.dev
+// TODO: Look into `goreleaser`
+// TODO: Finish README
+// TODO: Update helptext
+// TODO: Clean up and comment code
 
+func main() {
 	// Check that dircolors command is installed
 	_, err := exec.LookPath("dircolors")
 	if err != nil {
@@ -34,30 +42,33 @@ func main() {
 
 func handleArgs() {
 	// Else, evaluate what the command is asking for
-	// I'm probably only going to have `help`, `generate`, and `apply` as subcommands
 	switch os.Args[1] {
 	case "help":
 		log.Printf("Help command")
 
-	case "generate":
-		if len(os.Args) < 3 {
-			log.Fatal("No theme provided")
+	case "preview":
+		output := doApply()
+		output = strings.TrimPrefix(output, "LS_COLORS='")
+		output = strings.TrimSpace(output)
+		output = strings.TrimSuffix(output, "';\nexport LS_COLORS")
+
+		os.Setenv("LS_COLORS", output)
+
+		binary, pathErr := exec.LookPath("ls")
+		if pathErr != nil {
+			log.Fatal(errors.New("Path err: " + pathErr.Error()))
 		}
-		themeName := os.Args[2]
-		log.Print("Generate command for " + themeName)
-		theme := tui.GetTheme(themeName)
-		err := theme.GenerateDirColors()
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			log.Print("Successfully generated file at " + filepath.Join(theme.Path, ".dircolors"))
+
+		execErr := syscall.Exec(binary, []string{"ls", "--color=auto"}, os.Environ())
+		if execErr != nil {
+			log.Fatal(errors.New("Exec err: " + execErr.Error()))
 		}
 
 	case "apply":
-		doApply()
+		fmt.Print(doApply())
 	case "apply-8bit":
 		tui.EightBitMode = true
-		doApply()
+		fmt.Print(doApply())
 
 	default:
 		log.Fatal("Command not found")
@@ -65,8 +76,7 @@ func handleArgs() {
 
 }
 
-func doApply() {
-
+func doApply() string {
 	var theme string
 	if len(os.Args) < 3 {
 		theme = "default"
@@ -84,5 +94,5 @@ func doApply() {
 	if cmdErr != nil {
 		log.Fatal(cmdErr.Error() + string(cmdOut))
 	}
-	fmt.Print(string(cmdOut))
+	return string(cmdOut)
 }
