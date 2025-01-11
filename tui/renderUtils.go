@@ -3,11 +3,9 @@ package tui
 import (
 	"errors"
 	"fmt"
-	// "image/color"
 	"log"
 	"os"
 	"regexp"
-	// "strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -20,6 +18,7 @@ import (
 const Title = "stylish"
 const Subtitle = "~ Feel good in your shell ~"
 
+// HexCodePattern will regex match any 6 digit hexcode
 const HexCodePattern = "[0-9a-fA-F]{6}"
 
 const ConstWidth = 35

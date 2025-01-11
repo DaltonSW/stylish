@@ -16,7 +16,9 @@ import (
 
 // TODO: Swap to cobra for commands
 // TODO: Move stuff into `cmd` and `internal` to publish on pkg.go.dev
+
 // TODO: Look into `goreleaser`
+
 // TODO: Finish README
 // TODO: Update helptext
 // TODO: Clean up and comment code
@@ -26,6 +28,11 @@ func main() {
 	_, err := exec.LookPath("dircolors")
 	if err != nil {
 		log.Fatal("Package `dircolors` not found on PATH. Please install it before continuing.")
+	}
+
+	_, err = exec.LookPath("ls")
+	if err != nil {
+		log.Fatal("Package `ls` not found on PATH. Please install it before continuing.")
 	}
 
 	// If no arguments are provided, just run the TUI
