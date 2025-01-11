@@ -121,9 +121,9 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m LandingModel) View() string {
 	if m.InputActive {
-		return Center(ViewportBorder.Render(m.ThemeInput.View()))
+		return RenderModel(Center(fmt.Sprintf("%v\n%v", TitleStyle.Render("New Theme Name"), m.ThemeInput.View())), "")
 	} else if m.DeleteActive {
-		return Center(ViewportBorder.Render("Delete this theme? (y/n)"))
+		return RenderModel(Center(TitleStyle.Render("Delete this theme (y/n)")), "")
 	} else {
 		listHeader := CenterHorz(TitleStyle.Render("Current Themes") + "\n" + SubtitleStyle.Render(ThemeConfigFolder))
 		return RenderModel(listHeader+"\n"+m.ThemeList.View(), m.help.View(m.keys))
