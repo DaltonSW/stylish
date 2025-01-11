@@ -8,7 +8,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
-	"go.dalton.dog/colorgen/tui"
+	"go.dalton.dog/stylish/tui"
 )
 
 func main() {
@@ -72,6 +72,11 @@ func doApply() {
 		theme = "default"
 	} else {
 		theme = os.Args[2]
+	}
+
+	err := tui.GetTheme(theme).GenerateDirColors()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	cmd := exec.Command("dircolors", filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
