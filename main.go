@@ -13,6 +13,8 @@ import (
 // TODO: Update helptext
 // TODO: Clean up and comment code
 
+// TODO: `c` for `copy`
+
 func main() {
 	// Check that `dircolors` is installed
 	checkCommand("dircolors")

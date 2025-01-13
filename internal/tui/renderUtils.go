@@ -15,6 +15,13 @@ import (
 	"golang.org/x/term"
 )
 
+const FancyTitle = `      _         _ _     _
+  ___| |_ _   _| (_)___| |__
+ / __| __| | | | | / __| '_ \
+ \__ \ |_| |_| | | \__ \ | | |
+ |___/\__|\__, |_|_|___/_| |_|
+          |___/               `
+
 const Title = "stylish"
 const Subtitle = "~ Feel good in your shell ~"
 
@@ -24,12 +31,6 @@ const HexCodePattern = "[0-9a-fA-F]{6}"
 const ConstWidth = 35
 const ConstHeight = 27
 
-const TrueColorFore = "38;2;%d;%d;%d"
-const TrueColorBack = "48;2;%d;%d;%d"
-
-const EightBitFore = "38;5;%d"
-const EightBitBack = "48;5;%d"
-
 var EightBitMode = false
 var DefaultTermFore lipgloss.Color
 var DefaultTermBack lipgloss.Color
@@ -38,6 +39,16 @@ var ViewportBorder = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).B
 
 var TitleStyle = lipgloss.NewStyle().Underline(true).Bold(true).Italic(true)
 var SubtitleStyle = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("#888888"))
+
+var HelpKeyStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+	Light: "#909090",
+	Dark:  "#626262",
+})
+
+var HelpDescStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
+	Light: "#B2B2B2",
+	Dark:  "#4A4A4A",
+})
 
 var FocusedAreaStyle = textarea.Style{}
 
@@ -66,7 +77,7 @@ func GetTermSize() (int, int) {
 }
 
 func CenterHorz(msg string) string {
-	return lipgloss.PlaceHorizontal(ConstWidth, lipgloss.Center, msg)
+	return lipgloss.PlaceHorizontal(ConstWidth+1, lipgloss.Center, msg)
 
 }
 
@@ -75,7 +86,8 @@ func Center(msg string) string {
 }
 
 func ProgramHeader() string {
-	return lipgloss.PlaceHorizontal(ConstWidth+2, lipgloss.Center, fmt.Sprintf("%v\n%v", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
+	// return lipgloss.PlaceHorizontal(ConstWidth+2, lipgloss.Center, fmt.Sprintf("%v\n%v", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
+	return lipgloss.NewStyle().PaddingLeft((ConstWidth-lipgloss.Width(FancyTitle))/2 + 2).Render(FancyTitle)
 }
 
 func RenderModel(body, footer string) string {

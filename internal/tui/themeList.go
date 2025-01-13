@@ -17,6 +17,8 @@ type LandingModel struct {
 	ThemeList    list.Model
 	ThemeInput   textinput.Model
 	InputActive  bool
+	isCopying    bool
+	themeToCopy  string
 	DeleteActive bool
 
 	keys landingKeymap
@@ -43,7 +45,7 @@ func NewLandingModel() LandingModel {
 
 	newHelp := help.New()
 	newHelp.ShowAll = true
-	newHelp.Width = ConstWidth
+	newHelp.Width = ConstWidth - 2
 
 	return LandingModel{
 		ThemeList:  l,
@@ -65,8 +67,20 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.InputActive {
+				name := m.ThemeInput.Value()
+				if m.isCopying {
+					srcDir := filepath.Join(ThemeConfigFolder, m.themeToCopy)
+					destDir := filepath.Join(ThemeConfigFolder, name)
+
+					err := os.CopyFS(destDir, os.DirFS(srcDir))
+					if err != nil {
+						log.Fatal(err)
+					}
+					m.isCopying = false
+					m.themeToCopy = ""
+				}
 				m.ThemeInput.Blur()
-				return NewThemeModel(GetTheme(m.ThemeInput.Value())), nil
+				return NewThemeModel(GetTheme(name)), nil
 
 			} else {
 				selected := m.ThemeList.SelectedItem().(Theme)
@@ -92,9 +106,13 @@ func (m LandingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			return m, nil
-		case "n":
+		case "n", "c":
 			if !m.InputActive && !m.DeleteActive {
 				m.InputActive = true
+				if msg.String() == "c" {
+					m.isCopying = true
+					m.themeToCopy = m.ThemeList.SelectedItem().(Theme).Name
+				}
 				return m, m.ThemeInput.Focus()
 			}
 			if m.DeleteActive {
@@ -123,7 +141,7 @@ func (m LandingModel) View() string {
 	if m.InputActive {
 		return RenderModel(Center(fmt.Sprintf("%v\n%v", TitleStyle.Render("New Theme Name"), m.ThemeInput.View())), "")
 	} else if m.DeleteActive {
-		return RenderModel(Center(TitleStyle.Render("Delete this theme (y/n)")), "")
+		return RenderModel(Center(TitleStyle.Render("Delete this theme? (y/n)")), "")
 	} else {
 		listHeader := CenterHorz(TitleStyle.Render("Current Themes") + "\n" + SubtitleStyle.Render(ThemeConfigFolder))
 		return RenderModel(listHeader+"\n"+m.ThemeList.View(), m.help.View(m.keys))
@@ -150,20 +168,20 @@ type landingKeymap struct {
 	Select key.Binding
 	Quit   key.Binding
 
-	Delete   key.Binding
-	Create   key.Binding
-	Generate key.Binding
-	Filter   key.Binding
+	Delete key.Binding
+	New    key.Binding
+	Copy   key.Binding
+	Filter key.Binding
 }
 
 func (k landingKeymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete, k.Generate}
+	return []key.Binding{k.Up, k.Down, k.Quit, k.New, k.Delete, k.Copy}
 }
 
 func (k landingKeymap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Select, k.Quit},
-		{k.Create, k.Delete, k.Generate, k.Filter},
+		{k.Up, k.Down, k.Quit, k.Select},
+		{k.New, k.Delete, k.Copy, k.Filter},
 	}
 }
 
@@ -189,13 +207,13 @@ func newLandingKeymap() landingKeymap {
 			key.WithKeys("d", "x"),
 			key.WithHelp("d", "Delete Theme"),
 		),
-		Create: key.NewBinding(
+		New: key.NewBinding(
 			key.WithKeys("n"),
 			key.WithHelp("n", "New Theme"),
 		),
-		Generate: key.NewBinding(
-			key.WithKeys("g"),
-			key.WithHelp("g", "Generate File"),
+		Copy: key.NewBinding(
+			key.WithKeys("c"),
+			key.WithHelp("c", "Copy Theme"),
 		),
 		Filter: key.NewBinding(
 			key.WithKeys("/"),

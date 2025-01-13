@@ -1,7 +1,6 @@
-# stylish
+# `stylish`
 
-Welcome to `stylish`, a simple and intuitive way to create `dircolors`-compatible config files!  
-This affects programs like `ls`, `tree`, `fd`, and any other tools that opt to respect the `LS_COLORS` environment variable.
+Welcome to `stylish`, a simple and intuitive way to create `dircolors`-compatible config files! This affects programs like `ls`, `tree`, `fd`, and any other tools that opt to respect the `LS_COLORS` environment variable.
 
 ## Why use `stylish`?
 
@@ -23,9 +22,7 @@ This affects programs like `ls`, `tree`, `fd`, and any other tools that opt to r
 
 ### Homebrew
 
-**Requirements:**
 - Have `brew` installed
-
 - Run the following:
 ```sh
 brew tap daltonsw/packages
@@ -34,18 +31,15 @@ brew install stylish
 
 ### From Source
 
-**Requirements:**
-- Have `Go` installed
+- Have `Go` and `git` installed
 - Have your `Go` install location on your `$PATH`
-
 - Clone the repo with `git clone https://github.com/DaltonSW/stylish.git`
-- `cd` into the cloned directory
 - Run `go mod tidy` to download module requirements
 - Run `go install .` to install the `stylish` binary
 
 ## Usage
 
-- The program is able to be run immediately after install. Start it with `stylish`. This will...
+- Start the program with `stylish`. This will...
     - Create a `stylish` folder in your user's default config folder (typically `~/.config`)
     - Creates a `default` theme inside of that folder
 - With the program running, you're able to create and edit your themes to your heart's content

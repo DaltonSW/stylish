@@ -19,18 +19,18 @@ type ThemeModel struct {
 	StyleList list.Model
 
 	NameInput  textinput.Model
-	nameActive bool
-
 	ColorInput textinput.Model
-	foreActive bool
-	backActive bool
-
-	FilesInput  textarea.Model
-	filesActive bool
+	FilesInput textarea.Model
 
 	showSystemFileTypes bool
 
-	InputActive bool
+	foreActive   bool
+	backActive   bool
+	filesActive  bool
+	inputActive  bool
+	deleteActive bool
+	nameActive   bool
+	isCopying    bool
 
 	help help.Model
 }
@@ -38,7 +38,7 @@ type ThemeModel struct {
 func NewThemeModel(theme Theme) ThemeModel {
 	newHelp := help.New()
 	newHelp.ShowAll = true
-	newHelp.Width = ConstWidth
+	newHelp.Width = ConstWidth - 3
 	var styles []list.Item
 	for _, style := range theme.Styles {
 		log.Debug(style)
@@ -88,16 +88,22 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "n": // New style
+		case "n", "c": // New style
 			if !m.isAnythingActive() {
+				if msg.String() == "c" {
+					m.isCopying = true
+				}
 				m.NameInput.SetValue("")
 				m.nameActive = true
 				return m, m.NameInput.Focus()
+			} else if m.deleteActive {
+				m.deleteActive = false
+				return m, nil
 			}
 		case "d": // Delete style
 			if !m.isAnythingActive() {
-				m.StyleList.RemoveItem(m.StyleList.Index())
-				m.Theme.RemoveStyle(style.Name)
+				m.deleteActive = true
+				return m, nil
 			}
 		case "1": // Toggle Bold
 			if !m.isAnythingActive() {
@@ -132,6 +138,13 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.filesActive = true
 				return m, m.FilesInput.Focus()
 			}
+		case "y":
+			if m.deleteActive {
+				m.StyleList.RemoveItem(m.StyleList.Index())
+				m.Theme.RemoveStyle(style.Name)
+				m.deleteActive = false
+				return m, nil
+			}
 		case "esc": // Close theme editor
 			if !m.isAnythingActive() {
 				m.Theme.GenerateDirColors()
@@ -151,7 +164,15 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.NameInput.SetValue("")
 						return m, nil
 					}
-					newStyle := NewStyle(m.Theme.Name, val)
+					var newStyle Style
+					if m.isCopying {
+						newStyle = CopyStyle(*style, val)
+						newStyle.SaveStyle()
+
+					} else {
+						newStyle = NewStyle(m.Theme.Name, val)
+
+					}
 					m.Theme.Styles = append(m.Theme.Styles, newStyle)
 					m.StyleList.InsertItem(len(m.StyleList.Items()), &newStyle)
 					m.StyleList.CursorDown()
@@ -211,9 +232,9 @@ func (m ThemeModel) View() string {
 	if !m.isAnythingActive() {
 		listHeader := CenterHorz(TitleStyle.Render("Theme Styles") + "\n" + SubtitleStyle.Render("Theme: "+m.Theme.Name))
 		return RenderModel(listHeader+"\n"+m.StyleList.View(), m.help.View(themeKeys))
-	}
-
-	if m.foreActive || m.backActive {
+	} else if m.deleteActive {
+		return RenderModel(Center(TitleStyle.Render("Delete this style? (y/n)")), "")
+	} else if m.foreActive || m.backActive {
 		return m.getColorModel()
 	} else if m.filesActive {
 		return RenderModel(fmt.Sprintf("%v\n\n%v",
@@ -240,7 +261,6 @@ func (m ThemeModel) getColorModel() string {
 	} else {
 		footerString = lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.ColorInput.Value())).Render(strings.Repeat("█", 18))
 	}
-	m.help.ShowAll = true
 
 	outStr := fmt.Sprintf("%v\n\n%v\n\n%v\n\n%v",
 		CenterHorz(titleStr),
@@ -252,13 +272,14 @@ func (m ThemeModel) getColorModel() string {
 }
 
 func (m ThemeModel) isAnythingActive() bool {
-	return m.backActive || m.foreActive || m.filesActive || m.nameActive
+	return m.backActive || m.foreActive || m.filesActive || m.nameActive || m.deleteActive
 }
 
 func (m *ThemeModel) deactivateInputs() {
 	m.backActive = false
 	m.foreActive = false
 	m.nameActive = false
+	m.isCopying = false
 	m.filesActive = false
 
 	m.ColorInput.Blur()
@@ -273,19 +294,19 @@ type themeKeymap struct {
 	Quit   key.Binding
 
 	Delete key.Binding
-	Create key.Binding
+	New    key.Binding
+	Copy   key.Binding
 	Filter key.Binding
 }
 
 func (k themeKeymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.Quit, k.Create, k.Delete}
+	return []key.Binding{k.Up, k.Down, k.Quit, k.New, k.Delete}
 }
 
 func (k themeKeymap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Select, k.Quit},
-		{k.Create, k.Delete, k.Filter}, //, k.Quit},
-		// {k.Quit, k.Filter},
+		{k.Up, k.Down, k.Quit},
+		{k.New, k.Delete, k.Copy, k.Filter},
 	}
 }
 
@@ -298,21 +319,21 @@ var themeKeys = themeKeymap{
 		key.WithKeys("j", "down"),
 		key.WithHelp("j/↓", "Down"),
 	),
-	Select: key.NewBinding(
-		key.WithKeys("enter"),
-		key.WithHelp("enter", "Select"),
-	),
 	Quit: key.NewBinding(
-		key.WithKeys("q", "esc", "ctrl+c"),
+		key.WithKeys("esc", "ctrl+c"),
 		key.WithHelp("ctrl+c", "Quit"),
 	),
 	Delete: key.NewBinding(
 		key.WithKeys("d", "x"),
 		key.WithHelp("d", "Delete Style"),
 	),
-	Create: key.NewBinding(
+	New: key.NewBinding(
 		key.WithKeys("n"),
 		key.WithHelp("n", "New Style"),
+	),
+	Copy: key.NewBinding(
+		key.WithKeys("c"),
+		key.WithHelp("c", "Copy Style"),
 	),
 	Filter: key.NewBinding(
 		key.WithKeys("/"),

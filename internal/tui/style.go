@@ -158,6 +158,19 @@ func NewStyle(themeName, styleName string) Style {
 	}
 }
 
+func CopyStyle(style Style, newName string) Style {
+	newStyle := NewStyle(style.Theme, newName)
+
+	newStyle.Bold = style.Bold
+	newStyle.Blink = style.Blink
+	newStyle.Under = style.Under
+	newStyle.Fore = style.Fore
+	newStyle.Back = style.Back
+	newStyle.FileTypes = append(newStyle.FileTypes, style.FileTypes...)
+
+	return newStyle
+}
+
 func GetStyle(theme, styleName string) Style {
 	themePath := filepath.Join(ThemeConfigFolder, theme)
 	var outStyle Style
