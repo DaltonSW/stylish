@@ -12,18 +12,9 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
+	"go.dalton.dog/stylish/internal/styling"
 	"golang.org/x/term"
 )
-
-const FancyTitle = `      _         _ _     _
-  ___| |_ _   _| (_)___| |__
- / __| __| | | | | / __| '_ \
- \__ \ |_| |_| | | \__ \ | | |
- |___/\__|\__, |_|_|___/_| |_|
-          |___/               `
-
-const Title = "stylish"
-const Subtitle = "~ Feel good in your shell ~"
 
 // HexCodePattern will regex match any 6 digit hexcode
 const HexCodePattern = "[0-9a-fA-F]{6}"
@@ -87,7 +78,8 @@ func Center(msg string) string {
 
 func ProgramHeader() string {
 	// return lipgloss.PlaceHorizontal(ConstWidth+2, lipgloss.Center, fmt.Sprintf("%v\n%v", TitleStyle.Render(Title), SubtitleStyle.Render(Subtitle)))
-	return lipgloss.NewStyle().PaddingLeft((ConstWidth-lipgloss.Width(FancyTitle))/2 + 2).Render(FancyTitle)
+	title := styling.GetColoredTitle()
+	return lipgloss.NewStyle().PaddingLeft((ConstWidth-lipgloss.Width(title))/2 + 2).Render(title)
 }
 
 func RenderModel(body, footer string) string {

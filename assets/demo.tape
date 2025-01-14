@@ -5,7 +5,7 @@ Output demo.mp4
 # Settings
 
 Set Width 700 
-Set Height 1100
+Set Height 1200
 Set TypingSpeed 100ms
 
 # Require `stylish` and its dependency
