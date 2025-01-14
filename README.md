@@ -29,24 +29,41 @@ brew tap daltonsw/packages
 brew install stylish
 ```
 
-### From Source
+### From Go
 
-- Have `Go` and `git` installed
+- Have `Go` 
 - Have your `Go` install location on your `$PATH`
-- Clone the repo with `git clone https://github.com/DaltonSW/stylish.git`
-- Run `go mod tidy` to download module requirements
-- Run `go install .` to install the `stylish` binary
+- Run the following: 
+```sh
+go install go.dalton.dog/stylish@latest
+```
 
 ## Usage
 
-- Start the program with `stylish`. This will...
-    - Create a `stylish` folder in your user's default config folder (typically `~/.config`)
-    - Creates a `default` theme inside of that folder
+- Start the program with `stylish`. This will:
+    - Create a `stylish` directory in your user's default config directory (typically `~/.config`)
+    - Create a `default` theme inside of that directory. **Note:** This theme is intended to be used on a dark background
 - With the program running, you're able to create and edit your themes to your heart's content
 - Once you're ready to apply a theme, you'll need to add the following to your shell's init file (`~/.bashrc`, `~/.zshrc`, etc.):
     - **Required:** `eval $(stylish apply <theme>)`
     - *Recommended:* `alias ls=ls --color=auto`
+- Once your init file is edited, relaunch your shell to start seeing the updated colors.
 
-## P.S.
+### P.S.
 
 Want to handle your hex code journey in your terminal too? Check out [termpicker](https://github.com/ChausseBenjamin/termpicker)!
+
+## Shoutouts
+
+- [Vivid](https://github.com/sharkdp/vivid) for being a great program and a great reference
+- [Catppuccin](https://github.com/catppuccin) for having pretty palettes
+- [CharmBracelet](https://github.com/charmbracelet) for the amazing modules for style, form, and function
+
+## Contributions
+
+Contributions are very welcome! I'd love for y'all to contribute themes you develop as well as expanding on the defaults to make them more reasonable. Check out the [CONTRIBUTING](.github/CONTRIBUTING.md) file for specifics.
+
+## License
+
+Copyright 2025 - Dalton Williams  
+Check [LICENSE](.github/LICENSE.md) in repo for full details
