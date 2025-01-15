@@ -1,4 +1,4 @@
-![Logo for stylish](../assets/logo.png)
+![Logo for stylish](./assets/logo.png)
 
 Welcome to `stylish`, a simple and intuitive way to create `dircolors`-compatible config files! This affects programs like `ls`, `tree`, `fd`, and any other tools that opt to respect the `LS_COLORS` environment variable.
 
