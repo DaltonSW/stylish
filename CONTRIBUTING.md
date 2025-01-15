@@ -17,8 +17,10 @@ To contribute a new theme, please do the following:
 ```md
 # theme_name 
 
-- Owner(s): *Your GitHub username(s). Used to auto-approve submitted theme update PRs*
+- Theme Source: *Reference to information about the theme elsewhere. Required if you're submitting a theme based on a palette you didn't create.*
+- Owner(s): *Your GitHub username(s). Used to auto-approve submitted theme update PRs. This refers to the theme submission owner, NOT the palette/name/copyright/etc. owner*
 - Contributor(s): *GitHub username(s) of anybody who has submitted an update, but isn't an original author (if any)*
+
 
 ## Preview
 
