@@ -63,6 +63,7 @@ func NewThemeModel(theme Theme) ThemeModel {
 	fileArea := textarea.New()
 	fileArea.Placeholder = ".mp3\n.ogg\n.wav\n.txt"
 	fileArea.SetWidth(ConstWidth - 8)
+	fileArea.SetHeight(ConstHeight - 10)
 
 	return ThemeModel{
 		Theme:      theme,
@@ -154,6 +155,7 @@ func (m ThemeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+h": // Show detailed system filetypes helptext
 			if m.filesActive {
 				m.showSystemFileTypes = !m.showSystemFileTypes
+				return m, textarea.Blink
 			}
 		case "ctrl+s": // Save and close
 			if m.isAnythingActive() {

@@ -154,14 +154,15 @@ Enter
 Type ".toml"
 Enter
 Type ".ini"
-Sleep 800ms
+Sleep 750ms
 Ctrl+S
 Sleep 800ms
 
-Sleep 2000ms
+Sleep 1000ms
 Ctrl+C
-Sleep 800ms
+Sleep 400ms
 Ctrl+C
+Sleep 200ms
 
 # Sleep 200ms
 # Type "stylish apply DemoTheme"
@@ -180,5 +181,7 @@ Sleep 4000ms
 Hide
 Type "rm -rf ~/.config/stylish/DemoTheme"
 Enter
-Type "rm -rf ./DemoDir"
+Type "cd .."
+Enter
+Type "rm -rf DemoDir"
 Enter
