@@ -1,0 +1,17 @@
+theme: default
+name: Audio
+bold: false
+under: false
+blink: false
+fore: ffadad
+back: ""
+filetypes:
+    - .wav
+    - .aiff
+    - .pcm
+    - .flac
+    - .alac
+    - .mp3
+    - .aac
+    - .ogg
+    - .m4a

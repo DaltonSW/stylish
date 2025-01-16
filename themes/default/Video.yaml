@@ -1,0 +1,19 @@
+theme: default
+name: Video
+bold: false
+under: false
+blink: false
+fore: 9BF6FF
+back: ""
+filetypes:
+    - .mp4
+    - .mkv
+    - .avi
+    - .mov
+    - .wmv
+    - .flv
+    - .webm
+    - .m4v
+    - .m4p
+    - .mpg
+    - .mpeg

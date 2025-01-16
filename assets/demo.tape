@@ -11,6 +11,8 @@ Set TypingSpeed 100ms
 # Require `stylish` and its dependency
 Require dircolors
 Require stylish
+Require ls
+Require tree
 
 # Hidden initialization
 Hide

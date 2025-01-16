@@ -1,0 +1,15 @@
+theme: default
+name: Documents
+bold: false
+under: false
+blink: false
+fore: A0C4FF
+back: ""
+filetypes:
+    - .md
+    - .txt
+    - .doc
+    - .docx
+    - .pdf
+    - .odt
+    - .rtf

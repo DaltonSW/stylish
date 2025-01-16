@@ -1,0 +1,9 @@
+theme: default
+name: Executables
+bold: true
+under: false
+blink: false
+fore: 118ab2
+back: ""
+filetypes:
+    - EXEC

@@ -1,0 +1,9 @@
+theme: default
+name: Directories
+bold: false
+under: true
+blink: false
+fore: FFC6FF
+back: ""
+filetypes:
+    - DIR

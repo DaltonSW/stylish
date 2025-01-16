@@ -1,0 +1,66 @@
+theme: default
+name: Source Code
+bold: false
+under: false
+blink: false
+fore: 06d6a0
+back: ""
+filetypes:
+    - .ada
+    - .asm
+    - .bat
+    - .c
+    - .cc
+    - .clj
+    - .cljs
+    - .cmake
+    - .coffee
+    - .cpp
+    - .cs
+    - .css
+    - .d
+    - .dart
+    - .elm
+    - .erl
+    - .ex
+    - .exs
+    - .f
+    - .f90
+    - .fs
+    - .go
+    - .groovy
+    - .h
+    - .hh
+    - .hpp
+    - .hs
+    - .html
+    - .htm
+    - .hx
+    - .java
+    - .jl
+    - .js
+    - .jsx
+    - .kt
+    - .kts
+    - .lua
+    - .m
+    - .ml
+    - .php
+    - .pl
+    - .pm
+    - .py
+    - .r
+    - .rb
+    - .rs
+    - .sass
+    - .scala
+    - .scss
+    - .sh
+    - .sql
+    - .swift
+    - .tcl
+    - .ts
+    - .tsx
+    - .vb
+    - .vue
+    - .zig

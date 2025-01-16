@@ -1,0 +1,10 @@
+theme: default
+name: Normal Files
+bold: false
+under: false
+blink: false
+fore: FFFFFC
+back: ""
+filetypes:
+    - FILE
+    - NORMAL

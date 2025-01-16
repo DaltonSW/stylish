@@ -1,0 +1,17 @@
+theme: default
+name: Archives
+bold: true
+under: false
+blink: false
+fore: EF476F
+back: ""
+filetypes:
+    - .zip
+    - .tar
+    - .gz
+    - .7z
+    - .iso
+    - .xz
+    - .rar
+    - .jar
+    - .pak

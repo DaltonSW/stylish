@@ -1,0 +1,17 @@
+theme: default
+name: Images
+bold: false
+under: false
+blink: false
+fore: BDB2FF
+back: ""
+filetypes:
+    - .png
+    - .jpg
+    - .jpeg
+    - .gif
+    - .tiff
+    - .bmp
+    - .svg
+    - .ico
+    - .webp

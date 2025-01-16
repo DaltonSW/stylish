@@ -1,0 +1,20 @@
+theme: default
+name: Config
+bold: false
+under: false
+blink: false
+fore: CAFFBF
+back: ""
+filetypes:
+    - .ini
+    - .conf
+    - .yaml
+    - .yml
+    - .toml
+    - .json
+    - .cfg
+    - .env
+    - .zshrc
+    - .bashrc
+    - .fish
+    - .xml
