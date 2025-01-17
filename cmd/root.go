@@ -20,6 +20,8 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
