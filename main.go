@@ -8,12 +8,18 @@ import (
 )
 
 // TODO: Look into `goreleaser`
+// TODO: Set up a brew tap
 
 // TODO: Finish README
-// TODO: Update helptext
-// TODO: Clean up and comment code
+//	- Document commands
+//	- Add Quick Start
+//	- Make it a bit less cluttered?
+//	- Add Table of Contents
 
-// TODO: `c` for `copy`
+// TODO: If `stylish` folder doesn't exist, create it and also export the `default` theme
+// TODO: Embed default themes
+// TODO: `export` command to save any embedded themes into the `stylish` folder
+// TODO: `list` command to list out embedded themes
 
 func main() {
 	// Check that `dircolors` is installed
