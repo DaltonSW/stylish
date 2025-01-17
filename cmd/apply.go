@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -26,7 +25,7 @@ var applyCmd = &cobra.Command{
 	Example: "eval $(stylish apply <theme>)",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Print(doApply())
+		fmt.Print(doApply(args[0]))
 	},
 }
 var applyEightBitCmd = &cobra.Command{
@@ -37,24 +36,18 @@ var applyEightBitCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		tui.EightBitMode = true
-		fmt.Print(doApply())
+		fmt.Print(doApply(args[0]))
 	},
 }
 
-func doApply() string {
-	var theme string
-	if len(os.Args) < 3 {
-		theme = "default"
-	} else {
-		theme = os.Args[2]
-	}
-
-	err := tui.GetTheme(theme).GenerateDirColors()
+func doApply(themeName string) string {
+	theme := tui.GetTheme(themeName)
+	err := theme.GenerateDirColors()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cmd := exec.Command("dircolors", filepath.Join(tui.ThemeConfigFolder, theme, ".dircolors"))
+	cmd := exec.Command("dircolors", filepath.Join(theme.Path, ".dircolors"))
 	cmdOut, cmdErr := cmd.Output()
 	if cmdErr != nil {
 		log.Fatal(cmdErr.Error() + string(cmdOut))

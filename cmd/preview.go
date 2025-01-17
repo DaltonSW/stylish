@@ -24,7 +24,7 @@ var previewCmd = &cobra.Command{
 		oldColors := os.Getenv("LS_COLORS")
 		defer os.Setenv("LS_COLORS", oldColors)
 
-		output := doApply()
+		output := doApply(args[0])
 		output = strings.TrimPrefix(output, "LS_COLORS='")
 		output = strings.TrimSpace(output)
 		output = strings.TrimSuffix(output, "';\nexport LS_COLORS")

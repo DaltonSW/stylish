@@ -143,10 +143,18 @@ func (s *Style) SetBack(back string) {
 }
 
 func (s *Style) SetFiles(files string) {
+	s.FileTypes = make([]string, 0)
 	if files == "" {
-		s.FileTypes = make([]string, 0)
-	} else {
-		s.FileTypes = strings.Split(files, "\n")
+		return
+	}
+
+	// Ensure we're not saving any blankline filetypes
+	tempTypes := strings.Split(files, "\n")
+	for _, newType := range tempTypes {
+		if newType != "" {
+			s.FileTypes = append(s.FileTypes, newType)
+
+		}
 	}
 }
 
@@ -260,6 +268,9 @@ func (s Style) GetDirColorBlock() string {
 	styleStr = strings.TrimSuffix(styleStr, ";")
 
 	for _, file := range s.FileTypes {
+		if file == "" {
+			continue
+		}
 		outStr += fmt.Sprintf("%v %v\n", file, styleStr)
 	}
 
