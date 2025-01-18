@@ -1,7 +1,7 @@
 <div align="center"">
-    <img src="./assets/logo.png" />
-    <h3>🖌️ A simple and intuitive way to create and apply stylish config files.</h3>
-    <h3>Works with <code>ls</code>, <code>tree</code>, <code>fd</code>, <code>exa</code>, and anything else that respects <code>$LS_COLORS</code>!</h3>
+    <img src="./assets/stylish.png" style="width: 700px;"/>
+    <h3>A simple and intuitive way to create and apply stylish config files 🖌️</h3>
+    <h3>Works with <code>ls</code>, <code>tree</code>, <code>fd</code>, <code>exa</code>, and anything else that respects <code>$LS_COLORS</code></h3>
     <br />
     <img src="./assets/demo.gif" />
 </div>
@@ -21,8 +21,13 @@
 </div>
 
 If you are comfortable with the defaults and just want to fast track your way to a pretty terminal, then you're just 2 steps away.
+
 - Install via one of the methods below
-- Add `eval $(stylish apply default)` and `alias ls=ls --color=auto`to your shell's init script
+- Add the following to your shell's init script:
+```sh
+eval $(stylish apply default)
+alias ls=ls --color=auto
+```
 - Be stylish on every future shell launch
 
 <div align="center">
@@ -31,7 +36,7 @@ If you are comfortable with the defaults and just want to fast track your way to
 
 ### Github Releases 🐙
 
-- Go to the `Releases` tab
+- Go to the `Releases` tab of the repo [here](https://github.com/DaltonSW/stylish/releases)
 - Download the latest binary for your OS
 - Place it on your `$PATH` and ensure it is executable
 
@@ -40,7 +45,7 @@ If you are comfortable with the defaults and just want to fast track your way to
 - Have `brew` installed
 - Run the following:
 ```sh
-brew install daltonsw/packages/stylish
+brew install daltonsw/tap/stylish
 ```
 
 ### Go 🖥️ 
