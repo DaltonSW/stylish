@@ -34,6 +34,11 @@ alias ls=ls --color=auto
     <h2>Installation ⬇️</h2>
 </div>
 
+> !WARNING
+> If you're on Mac, do the following alongside the normal installation
+
+Ensure you have `coreutils` installed AND added to your `PATH` by following the instructions on the [coreutils brew page](https://formulae.brew.sh/formula/coreutils)
+
 ### Github Releases 🐙
 
 - Go to the `Releases` tab of the repo [here](https://github.com/DaltonSW/stylish/releases)
