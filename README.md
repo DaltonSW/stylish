@@ -34,7 +34,7 @@ alias ls=ls --color=auto
     <h2>Installation ⬇️</h2>
 </div>
 
-> !WARNING
+> [!IMPORTANT]
 > If you're on Mac, do the following alongside the normal installation
 
 Ensure you have `coreutils` installed AND added to your `PATH` by following the instructions on the [coreutils brew page](https://formulae.brew.sh/formula/coreutils)
